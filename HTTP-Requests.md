@@ -18,9 +18,9 @@ https://www.ic.gc.ca/app/ccc/srch/bscSrch.do
 
 ```json
 {
-    'searchCriteriaBean.textField': 'IBM Canada Ltd.',
-    'searchCriteriaBean.column': 'nm',
-    'prtl': 1,
+    "searchCriteriaBean.textField": "IBM Canada Ltd.",
+    "searchCriteriaBean.column": "nm",
+    "prtl": 1,
 }
 ```
 
