@@ -1,3 +1,5 @@
+# Documentation for Scrapers
+
 > Useful HTTP logs for URL requests
 
 ## Log in for sessions
