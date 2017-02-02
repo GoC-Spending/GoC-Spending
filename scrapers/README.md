@@ -14,6 +14,12 @@ https://www.ic.gc.ca/app/scr/cc/CorporationsCanada/fdrlCrpSrch.html
 
 ![image](https://cloud.githubusercontent.com/assets/550895/22557729/659bdbb8-e939-11e6-9bdc-a1f0400d7be2.png)
 
+## Search with Open Corporates
+
+https://opencorporates.com/
+
+![image](https://cloud.githubusercontent.com/assets/550895/22557819/a8627cea-e939-11e6-9209-5dc8fe0a9492.png)
+
 ## Search by company name
 
 ![image](https://cloud.githubusercontent.com/assets/550895/22494202/87033b02-e803-11e6-8832-60449a1aa347.png)
