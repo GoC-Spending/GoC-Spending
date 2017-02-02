@@ -18,13 +18,20 @@ https://www.ic.gc.ca/app/ccc/srch/bscSrch.do
 
 ```json
 {
-    "searchCriteriaBean.textField": "IBM Canada Ltd.",
+    "searchCriteriaBean.textField": "*",
     "searchCriteriaBean.column": "nm",
     "prtl": 1,
+    "searchCriteriaBean.hitsPerPage": 500,
+    "searchCriteriaBean.sortSpec": "title asc",
+    "searchCriteriaBean.isSummaryOn": "N"
 }
 ```
 
+> You can use `*` for `textField` to query the entire database.
+
 ## Get company details
+
+> This query only works when using HTTP sessions.
 
 ![image](https://cloud.githubusercontent.com/assets/550895/22494273/17bef56e-e804-11e6-8cf9-acbcddbcece7.png)
 
