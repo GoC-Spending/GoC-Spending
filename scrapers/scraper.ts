@@ -47,14 +47,13 @@ async function main() {
       name = name.replace('/', '-').replace('.', '')
       name = unidecode(name)
       name = name.toUpperCase()
-
       const href: string = element.attribs.href
       if (href.match(/nvgt.do/)) {
         const V_TOKEN = Number(href.match(/V_TOKEN=(\d*)/)[1])
         const offset_V_TOKEN = new Date().getTime() - V_TOKEN
 
         // Create new request for details
-        if (corporations[name] === true) {
+        if (fs.existsSync(path.join(__dirname, 'corporations', name + '.html'))) {
           // console.log('Skipped:', name)
         } else {
           q.defer(async callback => {
