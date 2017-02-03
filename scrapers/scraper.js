@@ -69,7 +69,7 @@ function main() {
                         'searchCriteriaBean.textField': '*',
                         'searchCriteriaBean.column': 'nm',
                         'prtl': 1,
-                        'searchCriteriaBean.hitsPerPage': 2000,
+                        'searchCriteriaBean.hitsPerPage': 10000,
                         'searchCriteriaBean.sortSpec': 'title asc',
                         'searchCriteriaBean.isSummaryOn': 'N'
                     };
