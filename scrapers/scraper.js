@@ -40,10 +40,14 @@ var request = require("request-promise");
 var cheerio = require("cheerio");
 var d3 = require("d3-queue");
 var unidecode = require('unidecode');
+// Create Folder
+if (!fs.existsSync('corporations')) {
+    fs.mkdirSync('corporations');
+}
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var corporations, jar, login, formData, search, $, links, q;
+        var corporations, jar, login, formData, search, $, links, q, start, count;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -56,11 +60,13 @@ function main() {
                     return [4 /*yield*/, request.get('https://www.ic.gc.ca/app/ccc/srch/', { jar: jar })];
                 case 1:
                     login = _a.sent();
+                    // Get list of corporation names
+                    console.log('Start search...');
                     formData = {
                         'searchCriteriaBean.textField': '*',
                         'searchCriteriaBean.column': 'nm',
                         'prtl': 1,
-                        'searchCriteriaBean.hitsPerPage': 50,
+                        'searchCriteriaBean.hitsPerPage': 1000,
                         'searchCriteriaBean.sortSpec': 'title asc',
                         'searchCriteriaBean.isSummaryOn': 'N'
                     };
@@ -69,35 +75,49 @@ function main() {
                     search = _a.sent();
                     $ = cheerio.load(search);
                     links = $('ul.list-group.list-group-hover').find('a');
-                    q = d3.queue(10);
+                    q = d3.queue(5);
+                    start = new Date().getTime();
+                    count = 0;
                     // Iterate over available links
                     links.map(function (index, element) { return __awaiter(_this, void 0, void 0, function () {
                         var _this = this;
-                        var name_1, href_1, V_TOKEN;
+                        var name_1, href_1, V_TOKEN, offset_V_TOKEN_1;
                         return __generator(this, function (_a) {
                             if (element.children.length) {
                                 name_1 = element.children[0].data.trim();
                                 name_1 = name_1.replace('/', '-').replace('.', '');
                                 name_1 = unidecode(name_1);
+                                name_1 = name_1.toUpperCase();
                                 href_1 = element.attribs.href;
                                 if (href_1.match(/nvgt.do/)) {
                                     V_TOKEN = Number(href_1.match(/V_TOKEN=(\d*)/)[1]);
+                                    offset_V_TOKEN_1 = new Date().getTime() - V_TOKEN;
                                     // Create new request for details
                                     if (corporations[name_1] === true) {
                                     }
                                     else {
                                         q.defer(function (callback) { return __awaiter(_this, void 0, void 0, function () {
-                                            var baseUrl, details;
+                                            var fake_href, baseUrl, details, title;
                                             return __generator(this, function (_a) {
                                                 switch (_a.label) {
                                                     case 0:
-                                                        console.log('Saving HTML:', "-" + name_1 + "-");
+                                                        fake_href = href_1.replace(/V_TOKEN=\d*/, "V_TOKEN=" + (new Date().getTime() - offset_V_TOKEN_1));
                                                         baseUrl = 'https://www.ic.gc.ca/app/ccc/srch/';
                                                         return [4 /*yield*/, request.get(baseUrl + href_1, { jar: jar })];
                                                     case 1:
                                                         details = _a.sent();
-                                                        fs.writeFileSync(path.join(__dirname, 'corporations', name_1 + '.html'), details);
-                                                        callback(null);
+                                                        title = cheerio.load(details)('title').text().trim();
+                                                        if (title.match(/Error/i)) {
+                                                            console.log('Restarting...');
+                                                            main();
+                                                        }
+                                                        else {
+                                                            // console.log('Count:', count, 'Time:', new Date().getTime() - start)
+                                                            // count++
+                                                            console.log('Saving HTML:', "-" + name_1 + "-");
+                                                            fs.writeFileSync(path.join(__dirname, 'corporations', name_1 + '.html'), details);
+                                                            callback(null);
+                                                        }
                                                         return [2 /*return*/];
                                                 }
                                             });
