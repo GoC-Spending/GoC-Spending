@@ -1,0 +1,27 @@
+{
+  "name": "scrapers",
+  "version": "1.0.0",
+  "description": "> Useful HTTP logs for URL requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.15.3",
+    "cheerio": "^0.22.0",
+    "d3-queue": "^3.0.3",
+    "request": "^2.79.0",
+    "request-promise": "^4.1.1",
+    "unidecode": "^0.1.8"
+  },
+  "devDependencies": {
+    "@types/request": "0.0.39",
+    "@types/cheerio": "^0.17.31",
+    "@types/d3-queue": "^3.0.4",
+    "@types/node": "^7.0.4",
+    "@types/request-promise": "^4.1.33",
+    "typescript": "^2.1.5"
+  }
+}
