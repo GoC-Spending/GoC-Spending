@@ -8,10 +8,13 @@ const unidecode = require('unidecode')
 
 // Create Folder
 if (!fs.existsSync('corporations')) { fs.mkdirSync('corporations') }
+let thread = 0
 
 async function main() {
+  thread ++
   // Store Unique Corporation names from File System - Used as index
   const corporations = {}
+  console.log('scan')
   fs.readdirSync(path.join(__dirname, 'corporations')).map(filename => {
     const name = filename.replace('.html', '')
     corporations[name] = true
@@ -21,12 +24,12 @@ async function main() {
   const login = await request.get('https://www.ic.gc.ca/app/ccc/srch/', {jar})
 
   // Get list of corporation names
-  console.log('Start search...')
+  console.log('Starting thread...', thread)
   const formData = {
     'searchCriteriaBean.textField': '*',
     'searchCriteriaBean.column': 'nm',
     'prtl': 1,
-    'searchCriteriaBean.hitsPerPage': 1000,
+    'searchCriteriaBean.hitsPerPage': 2000,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.isSummaryOn': 'N'
   }
@@ -39,13 +42,13 @@ async function main() {
   const q = d3.queue(5)
   const start = new Date().getTime()
   let count = 0
-  let errors = 5
+  let errors = 0
 
   // Iterate over available links
   links.map(async (index, element: any) => {
     if (element.children.length) {
       let name: string = element.children[0].data.trim()
-      name = name.replace('/', '-').replace('.', '')
+      name = name.replace(/\//g, '-').replace('.', '')
       name = unidecode(name)
       name = name.toUpperCase()
       const href: string = element.attribs.href
@@ -58,16 +61,17 @@ async function main() {
           // console.log('Skipped:', name)
         } else {
           q.defer(async callback => {
+            if (errors > 5) { return callback(null) }
             const fake_href = href.replace(/V_TOKEN=\d*/, `V_TOKEN=${new Date().getTime() - offset_V_TOKEN}`)
             const baseUrl = 'https://www.ic.gc.ca/app/ccc/srch/'
             const details = await request.get(baseUrl + href, {jar})
             const title = cheerio.load(details)('title').text().trim()
 
             if (title.match(/Error/i)) {
-              errors --
-              if (errors === 0) {
+              errors ++
+              if (errors > 5) {
+                console.log('Restarting...', thread)
                 main()
-                console.log('Restarting...')
               }
               callback(null)
             } else {
@@ -83,7 +87,7 @@ async function main() {
     }
   })
   q.awaitAll(error => {
-    console.log('done')
+    console.log('done...', thread)
   })
 }
 main()
