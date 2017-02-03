@@ -24,6 +24,7 @@ def parse_page(s, content):
     soup = BeautifulSoup(content, "html.parser")
     links = soup.find("ul", "list-group list-group-hover").find_all("a", href=re.compile("nvgt.do?"))
     pagination = soup.find("ul", "pagination pagination-sm hidden-print").find_all("a", text="Next")
+
     print('links:', len(links))
 
     # Find all available links
@@ -39,7 +40,6 @@ def parse_page(s, content):
             if (re.findall('Error', title)):
                 print("Found Error:", name)
                 errors = True
-                break
             else:
                 print("Saving HTML:", name)
                 with open("corporations/" + name + ".html", "w") as f:
@@ -49,9 +49,9 @@ def parse_page(s, content):
             print('Skipped:', name)
 
     # Restart Script
-    if (errors):
-        print('Restarting...')
-        return parse_main()
+    # if (errors):
+    #     print('Restarting...')
+    #     return parse_main()
 
     for link in pagination:
         if (unique_pagination.get(link['href']) != True and link.get_text() != 'Previous'):
