@@ -14,16 +14,16 @@ async function main() {
   thread ++
 
   // Request Session from initial Get
+  console.log('Starting thread...', thread)
   const jar = request.jar()
   const login = await request.get('https://www.ic.gc.ca/app/ccc/srch/', {jar})
 
   // Get list of corporation names
-  console.log('Starting thread...', thread)
   const formData = {
     'searchCriteriaBean.textField': '*',
     'searchCriteriaBean.column': 'nm',
     'prtl': 1,
-    'searchCriteriaBean.hitsPerPage': 10000,
+    'searchCriteriaBean.hitsPerPage': 3000,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.isSummaryOn': 'N'
   }
