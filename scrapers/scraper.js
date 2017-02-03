@@ -44,6 +44,7 @@ var unidecode = require('unidecode');
 if (!fs.existsSync('corporations')) {
     fs.mkdirSync('corporations');
 }
+var thread = 0;
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var _this = this;
@@ -51,7 +52,9 @@ function main() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    thread++;
                     corporations = {};
+                    console.log('scan');
                     fs.readdirSync(path.join(__dirname, 'corporations')).map(function (filename) {
                         var name = filename.replace('.html', '');
                         corporations[name] = true;
@@ -61,12 +64,12 @@ function main() {
                 case 1:
                     login = _a.sent();
                     // Get list of corporation names
-                    console.log('Start search...');
+                    console.log('Starting thread...', thread);
                     formData = {
                         'searchCriteriaBean.textField': '*',
                         'searchCriteriaBean.column': 'nm',
                         'prtl': 1,
-                        'searchCriteriaBean.hitsPerPage': 1000,
+                        'searchCriteriaBean.hitsPerPage': 2000,
                         'searchCriteriaBean.sortSpec': 'title asc',
                         'searchCriteriaBean.isSummaryOn': 'N'
                     };
@@ -78,7 +81,7 @@ function main() {
                     q = d3.queue(5);
                     start = new Date().getTime();
                     count = 0;
-                    errors = 5;
+                    errors = 0;
                     // Iterate over available links
                     links.map(function (index, element) { return __awaiter(_this, void 0, void 0, function () {
                         var _this = this;
@@ -86,7 +89,7 @@ function main() {
                         return __generator(this, function (_a) {
                             if (element.children.length) {
                                 name_1 = element.children[0].data.trim();
-                                name_1 = name_1.replace('/', '-').replace('.', '');
+                                name_1 = name_1.replace(/\//g, '-').replace('.', '');
                                 name_1 = unidecode(name_1);
                                 name_1 = name_1.toUpperCase();
                                 href_1 = element.attribs.href;
@@ -102,6 +105,9 @@ function main() {
                                             return __generator(this, function (_a) {
                                                 switch (_a.label) {
                                                     case 0:
+                                                        if (errors > 5) {
+                                                            return [2 /*return*/, callback(null)];
+                                                        }
                                                         fake_href = href_1.replace(/V_TOKEN=\d*/, "V_TOKEN=" + (new Date().getTime() - offset_V_TOKEN_1));
                                                         baseUrl = 'https://www.ic.gc.ca/app/ccc/srch/';
                                                         return [4 /*yield*/, request.get(baseUrl + href_1, { jar: jar })];
@@ -109,10 +115,10 @@ function main() {
                                                         details = _a.sent();
                                                         title = cheerio.load(details)('title').text().trim();
                                                         if (title.match(/Error/i)) {
-                                                            errors--;
-                                                            if (errors === 0) {
+                                                            errors++;
+                                                            if (errors > 5) {
+                                                                console.log('Restarting...', thread);
                                                                 main();
-                                                                console.log('Restarting...');
                                                             }
                                                             callback(null);
                                                         }
@@ -134,7 +140,7 @@ function main() {
                         });
                     }); });
                     q.awaitAll(function (error) {
-                        console.log('done');
+                        console.log('done...', thread);
                     });
                     return [2 /*return*/];
             }
