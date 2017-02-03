@@ -12,13 +12,7 @@ let thread = 0
 
 async function main() {
   thread ++
-  // Store Unique Corporation names from File System - Used as index
-  const corporations = {}
-  console.log('scan')
-  fs.readdirSync(path.join(__dirname, 'corporations')).map(filename => {
-    const name = filename.replace('.html', '')
-    corporations[name] = true
-  })
+
   // Request Session from initial Get
   const jar = request.jar()
   const login = await request.get('https://www.ic.gc.ca/app/ccc/srch/', {jar})
