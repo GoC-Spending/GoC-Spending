@@ -47,7 +47,7 @@ if (!fs.existsSync('corporations')) {
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var corporations, jar, login, formData, search, $, links, q, start, count;
+        var corporations, jar, login, formData, search, $, links, q, start, count, errors;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -78,6 +78,7 @@ function main() {
                     q = d3.queue(5);
                     start = new Date().getTime();
                     count = 0;
+                    errors = 5;
                     // Iterate over available links
                     links.map(function (index, element) { return __awaiter(_this, void 0, void 0, function () {
                         var _this = this;
@@ -108,8 +109,11 @@ function main() {
                                                         details = _a.sent();
                                                         title = cheerio.load(details)('title').text().trim();
                                                         if (title.match(/Error/i)) {
-                                                            console.log('Restarting...');
-                                                            main();
+                                                            errors--;
+                                                            if (errors === 0) {
+                                                                main();
+                                                                console.log('Restarting...');
+                                                            }
                                                         }
                                                         else {
                                                             // console.log('Count:', count, 'Time:', new Date().getTime() - start)

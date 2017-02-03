@@ -39,6 +39,7 @@ async function main() {
   const q = d3.queue(5)
   const start = new Date().getTime()
   let count = 0
+  let errors = 5
 
   // Iterate over available links
   links.map(async (index, element: any) => {
@@ -63,8 +64,11 @@ async function main() {
             const title = cheerio.load(details)('title').text().trim()
 
             if (title.match(/Error/i)) {
-              console.log('Restarting...')
-              main()
+              errors --
+              if (errors === 0) {
+                main()
+                console.log('Restarting...')
+              }
             } else {
               // console.log('Count:', count, 'Time:', new Date().getTime() - start)
               // count++
