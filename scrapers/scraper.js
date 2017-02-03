@@ -93,7 +93,7 @@ function main() {
                                     V_TOKEN = Number(href_1.match(/V_TOKEN=(\d*)/)[1]);
                                     offset_V_TOKEN_1 = new Date().getTime() - V_TOKEN;
                                     // Create new request for details
-                                    if (corporations[name_1] === true) {
+                                    if (fs.existsSync(path.join(__dirname, 'corporations', name_1 + '.html'))) {
                                     }
                                     else {
                                         q.defer(function (callback) { return __awaiter(_this, void 0, void 0, function () {
