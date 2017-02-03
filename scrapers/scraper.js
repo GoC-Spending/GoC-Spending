@@ -114,6 +114,7 @@ function main() {
                                                                 main();
                                                                 console.log('Restarting...');
                                                             }
+                                                            callback(null);
                                                         }
                                                         else {
                                                             // console.log('Count:', count, 'Time:', new Date().getTime() - start)
