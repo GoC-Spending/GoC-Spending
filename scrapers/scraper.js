@@ -48,17 +48,11 @@ var thread = 0;
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var _this = this;
-        var corporations, jar, login, formData, search, $, links, q, start, count, errors;
+        var jar, login, formData, search, $, links, q, start, count, errors;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     thread++;
-                    corporations = {};
-                    console.log('scan');
-                    fs.readdirSync(path.join(__dirname, 'corporations')).map(function (filename) {
-                        var name = filename.replace('.html', '');
-                        corporations[name] = true;
-                    });
                     jar = request.jar();
                     return [4 /*yield*/, request.get('https://www.ic.gc.ca/app/ccc/srch/', { jar: jar })];
                 case 1:
