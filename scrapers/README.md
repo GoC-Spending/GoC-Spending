@@ -35,7 +35,8 @@ https://www.ic.gc.ca/app/ccc/srch/bscSrch.do
     "searchCriteriaBean.textField": "*",
     "searchCriteriaBean.column": "nm",
     "prtl": 1,
-    "searchCriteriaBean.hitsPerPage": 500,
+    "V_SEARCH.docsStart": 10,
+    "searchCriteriaBean.hitsPerPage": 25,
     "searchCriteriaBean.sortSpec": "title asc",
     "searchCriteriaBean.isSummaryOn": "N"
 }

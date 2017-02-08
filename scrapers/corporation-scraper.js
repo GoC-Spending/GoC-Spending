@@ -84,7 +84,7 @@ function getLinks ({jar, details}) {
  * @param {CookieJar} jar
  */
 function getCorporations ({links, jar}) {
-  console.log('Get Corporations')
+  console.log('Get corporations')
 
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
@@ -93,8 +93,8 @@ function getCorporations ({links, jar}) {
         // Parse title to check for errors
         const title = cheerio.load(details)('title').text().trim()
         if (title.match(/Error/i)) {
-          console.log('Error:', name)
-          callback(null)
+          console.log(chalk.bgRed.white('Error:', name))
+          callback(new Error('error in title'))
         } else {
           console.log(chalk.bgGreen.black('Saving HTML:', name))
           fs.writeFileSync(path.join(__dirname, 'corporations', name + '.html'), details)
@@ -103,14 +103,17 @@ function getCorporations ({links, jar}) {
       })
     })
   }
-  q.awaitAll(() => {
-    console.log('done')
-
-    // Add 25 to offset
-    const status = load.sync('status.json')
-    status.offset = status.offset + 25
-    write.sync('status.json', status)
-    main()
+  q.awaitAll(error => {
+    if (!error) {
+      // Restart main application & add 25 to offset
+      const status = load.sync('status.json')
+      status.offset = status.offset + 25
+      write.sync('status.json', status)
+      main()
+    } else {
+      // Restart main app without adding any offset
+      main()
+    }
   })
 }
 
