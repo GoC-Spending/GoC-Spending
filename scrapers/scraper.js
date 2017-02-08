@@ -29,10 +29,9 @@ function login () {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  console.log('Get details')
-
   const offset = load.sync('status.json').offset
-  console.log('Status offset:', offset)
+  console.log('Get details:', offset)
+
   const formData = {
     'searchCriteriaBean.textField': '*',
     'searchCriteriaBean.column': 'nm',
@@ -85,7 +84,7 @@ function getLinks ({jar, details}) {
  * @param {CookieJar} jar
  */
 function getCorporations ({links, jar}) {
-  console.log('Get Corporations...')
+  console.log('Get Corporations')
 
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
@@ -97,7 +96,7 @@ function getCorporations ({links, jar}) {
           console.log('Error:', name)
           callback(null)
         } else {
-          console.log('Saving HTML:', name)
+          console.log(chalk.bgGreen.black('Saving HTML:', name))
           fs.writeFileSync(path.join(__dirname, 'corporations', name + '.html'), details)
           callback(null)
         }
