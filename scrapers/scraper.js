@@ -6,6 +6,8 @@ const d3 = require('d3-queue')
 const chalk = require('chalk')
 const cheerio = require('cheerio')
 const unidecode = require('unidecode')
+const write = require('write-json-file')
+const load = require('load-json-file')
 
 /**
  * Login it to receive session credentials
@@ -13,7 +15,7 @@ const unidecode = require('unidecode')
  * @returns {Promise<CookieJar>}
  */
 function login () {
-  console.log('Login...')
+  console.log('Login')
   const jar = request.jar()
   return request.get('https://www.ic.gc.ca/app/ccc/srch/', {jar})
     .then(() => jar)
@@ -27,8 +29,10 @@ function login () {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  console.log('Get details...')
-  const offset = 5000
+  console.log('Get details')
+
+  const offset = load.sync('status.json').offset
+  console.log('Status offset:', offset)
   const formData = {
     'searchCriteriaBean.textField': '*',
     'searchCriteriaBean.column': 'nm',
@@ -50,7 +54,7 @@ function getDetails (jar) {
  * @returns {Object, jar} links {name: <href>}
  */
 function getLinks ({jar, details}) {
-  console.log('Get links...')
+  console.log('Get links')
 
   const results = {}
   const html = cheerio.load(details)
@@ -81,6 +85,8 @@ function getLinks ({jar, details}) {
  * @param {CookieJar} jar
  */
 function getCorporations ({links, jar}) {
+  console.log('Get Corporations...')
+
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
@@ -100,10 +106,19 @@ function getCorporations ({links, jar}) {
   }
   q.awaitAll(() => {
     console.log('done')
+
+    // Add 25 to offset
+    const status = load.sync('status.json')
+    status.offset = status.offset + 25
+    write.sync('status.json', status)
+    main()
   })
 }
 
 function main () {
+  if (!fs.existsSync('status.json')) {
+    write.sync('status.json', {offset: 0})
+  }
   login()
     .then(getDetails)
     .then(getLinks)
