@@ -100,11 +100,16 @@ function getCorporations ({links, jar}) {
           fs.writeFileSync(path.join(__dirname, 'corporations', name + '.html'), details)
           callback(null)
         }
+      }, error => {
+        if (error) {
+          console.log(chalk.bgRed.white(error))
+          callback(new Error('http error'))
+        }
       })
     })
   }
-  q.awaitAll(error => {
-    if (!error) {
+  q.awaitAll(errors => {
+    if (!errors) {
       // Restart main application & add 25 to offset
       const status = load.sync('status.json')
       status.offset = status.offset + 25
@@ -112,6 +117,7 @@ function getCorporations ({links, jar}) {
       main()
     } else {
       // Restart main app without adding any offset
+      console.log(chalk.bgRed.white(errors))
       main()
     }
   })
