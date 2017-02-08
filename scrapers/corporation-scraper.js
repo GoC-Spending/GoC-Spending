@@ -32,7 +32,7 @@ function getDetails (jar) {
   const status = load.sync('status.json')
   const offset = status.offset
   const hitsPerPage = status.hitsPerPage
-  console.log('Get details:', offset)
+  console.log('Get details | offset:', offset)
 
   const formData = {
     'searchCriteriaBean.textField': '*',
@@ -41,6 +41,7 @@ function getDetails (jar) {
     'V_SEARCH.docsStart': offset,
     'searchCriteriaBean.hitsPerPage': hitsPerPage,
     'searchCriteriaBean.sortSpec': 'title asc',
+    'searchCriteriaBean.conceptOperator': 'and',
     'searchCriteriaBean.isSummaryOn': 'N'
   }
   return request.post('https://www.ic.gc.ca/app/ccc/srch/srch.do', {formData, jar})
@@ -48,35 +49,59 @@ function getDetails (jar) {
 }
 
 /**
- * Get available links from details page
+ * Parse available links from details page
  *
  * @param {CookieJar} jar
  * @param {HTML} details
  * @returns {Object, jar} links {name: <href>}
  */
-function getLinks ({jar, details}) {
-  console.log('Get links')
+function parseLinks ({jar, details}) {
+  console.log('Parsing links')
 
   const results = {}
-  const html = cheerio.load(details)
-  const links = html('ul.list-group.list-group-hover').find('a')
-  links.map((index, element) => {
-    if (element.children.length) {
-      let name = element.children[0].data.trim()
-      name = name.replace(/\//g, '-').replace('.', '')
-      name = unidecode(name)
-      name = name.toUpperCase()
-      const href = element.attribs.href
-      if (href.match(/nvgt.do/)) {
-        if (!fs.existsSync(path.join(__dirname, 'corporations', name + '.html'))) {
-          results[name] = href
-        }
-      }
+  const links = findLinks(details)
+  for (let {href, name} of links) {
+    if (!fs.existsSync(path.join(__dirname, 'corporations', name + '.html'))) {
+      results[name] = href
     }
-  })
+  }
   return new Promise(resolve => {
+    console.log('Found links:', links.length)
     resolve({links: results, jar})
   })
+}
+
+/**
+ * Find Links
+ *
+ * @param {HTML} details
+ * @returns {Array<Object>} {href, name}
+ */
+function findLinks (details) {
+  const $ = cheerio.load(details)
+  const links = []
+  $('a').each((index, link) => {
+    const href = link.attribs.href
+    if (href.match(/docsCount/)) {
+      const name = cleanName(link.childNodes[0].data)
+      links.push({href, name})
+    }
+  })
+  return links
+}
+
+/**
+ * Clean name
+ *
+ * @param {string} name
+ * @returns {string} clean name
+ */
+function cleanName (name) {
+  name = name.trim()
+  name = name.replace(/\//g, '-').replace(/\./g, '')
+  name = unidecode(name)
+  name = name.toUpperCase()
+  return name
 }
 
 /**
@@ -86,7 +111,7 @@ function getLinks ({jar, details}) {
  * @param {CookieJar} jar
  */
 function getCorporations ({links, jar}) {
-  console.log('Get corporations')
+  console.log('Get corporations:', Object.keys(links).length)
 
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
@@ -131,7 +156,7 @@ function main () {
   }
   login()
     .then(getDetails)
-    .then(getLinks)
+    .then(parseLinks)
     .then(getCorporations)
 }
 
