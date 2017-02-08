@@ -29,7 +29,9 @@ function login () {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  const offset = load.sync('status.json').offset
+  const status = load.sync('status.json')
+  const offset = status.offset
+  const hitsPerPage = status.hitsPerPage
   console.log('Get details:', offset)
 
   const formData = {
@@ -37,7 +39,7 @@ function getDetails (jar) {
     'searchCriteriaBean.column': 'nm',
     'prtl': 1,
     'V_SEARCH.docsStart': offset,
-    'searchCriteriaBean.hitsPerPage': 25,
+    'searchCriteriaBean.hitsPerPage': hitsPerPage,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.isSummaryOn': 'N'
   }
@@ -112,7 +114,7 @@ function getCorporations ({links, jar}) {
     if (!errors) {
       // Restart main application & add 25 to offset
       const status = load.sync('status.json')
-      status.offset = status.offset + 25
+      status.offset = status.offset + status.hitsPerPage
       write.sync('status.json', status)
       main()
     } else {
