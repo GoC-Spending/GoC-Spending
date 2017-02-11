@@ -2,16 +2,18 @@ const fs = require('fs')
 const cheerio = require('cheerio')
 
 const details = fs.readFileSync('details.html', 'utf-8')
-const $ = cheerio.load(details)
+// const $ = cheerio.load(details)
 
-const links = []
-$('a').each((index, link) => {
-  const href = link.attribs.href
-  if (href.match(/docsCount/)) {
-    console.log(link.childNodes[0].data.trim())
-    links.push(href)
-  }
-})
+const token = details.match(/V_TOKEN=(\d+)/)[1]
+console.log(token)
+// const links = []
+// $('a').each((index, link) => {
+//   const href = link.attribs.href
+//   if (href.match(/docsCount/)) {
+//     console.log(link.childNodes[0].data.trim())
+//     links.push(href)
+//   }
+// })
 // console.log(links)
 
 // links = links.filter(link => link.match(/docsCount/g))
