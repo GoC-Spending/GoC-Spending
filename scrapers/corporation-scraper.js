@@ -18,12 +18,18 @@ const headers = {
 /**
  * Login it to receive session credentials
  *
+ * @param {CookieJar} jar
  * @returns {Promise<CookieJar>}
  */
-function login () {
-  console.log('Login')
-  const jar = request.jar()
-  return request.get('https://www.ic.gc.ca/app/ccc/srch/', {headers, jar})
+function login (jar) {
+  if (jar) {
+    console.log('Login | reusing CookieJar')
+    return new Promise(resolve => resolve(jar))
+  }
+
+  console.log('Login | retrieve new CookieJar')
+  jar = request.jar()
+  return request.get('https://www.ic.gc.ca', {headers, jar})
     .then(() => jar)
 }
 
@@ -76,7 +82,7 @@ function getDetails (jar) {
     'searchCriteriaBean.dunSuffix': '',
     'sbmtBtn': ''
   }
-  return request.get('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, qs, jar})
+  return request.get('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, qs, jar, timeout: 5000})
     .then(details => { return {details, jar} })
 }
 
@@ -175,21 +181,22 @@ function getCorporations ({links, jar}) {
       const status = load.sync('status.json')
       status.offset = status.offset + status.hitsPerPage
       write.sync('status.json', status)
-      main()
+      main(jar)
     } else {
       // Restart main app without adding any offset
       console.log(chalk.bgRed.white(errors))
-      main()
+      main(jar)
     }
   })
 }
 
-function main () {
+function main (jar) {
   if (!fs.existsSync('status.json')) {
     write.sync('status.json', {offset: 0})
   }
-  login()
+  login(jar)
     .then(getDetails)
+    .catch(() => main())
     .then(parseLinks)
     .then(getCorporations)
 }
