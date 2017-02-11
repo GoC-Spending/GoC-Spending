@@ -40,17 +40,43 @@ function getDetails (jar) {
   const hitsPerPage = status.hitsPerPage
   console.log('Get details | offset:', offset)
 
-  const formData = {
-    'searchCriteriaBean.textField': '*',
-    'searchCriteriaBean.column': 'nm',
+  const qs = {
+    lang: 'eng',
+    profileId: '',
     'prtl': 1,
     'V_SEARCH.docsStart': offset,
+    'searchCriteriaBean.textField': '*',
+    'searchCriteriaBean.column': 'nm',
     'searchCriteriaBean.hitsPerPage': hitsPerPage,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.conceptOperator': 'and',
-    'searchCriteriaBean.isSummaryOn': 'N'
+    'searchCriteriaBean.isSummaryOn': 'N',
+    'searchCriteriaBean.isExportingOrInterested': 'exportingActively',
+    'searchCriteriaBean.companyName': '',
+    'searchCriteriaBean.province': '',
+    'searchCriteriaBean.city': '',
+    'searchCriteriaBean.postalCode': '',
+    'searchCriteriaBean.companyProfile': '',
+    'searchCriteriaBean.naicsCodeText': '',
+    'searchCriteriaBean.product': '',
+    'searchCriteriaBean.primaryBusinessActivity': '',
+    'searchCriteriaBean.numberOfEmployees': '',
+    'searchCriteriaBean.totalSales': '',
+    'searchCriteriaBean.exportSales': '',
+    'searchCriteriaBean.isExporter': '',
+    'searchCriteriaBean.exportingCountry': '',
+    'searchCriteriaBean.exportingState': '',
+    'searchCriteriaBean.nsnCode': '',
+    'searchCriteriaBean.fscCode': '',
+    'searchCriteriaBean.niinCode': '',
+    'searchCriteriaBean.marketInterest': '',
+    'searchCriteriaBean.cageCode': '',
+    'searchCriteriaBean.jcoCode': '',
+    'searchCriteriaBean.dunNumber': '',
+    'searchCriteriaBean.dunSuffix': '',
+    'sbmtBtn': ''
   }
-  return request.post('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, formData, jar})
+  return request.get('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, qs, jar})
     .then(details => { return {details, jar} })
 }
 
@@ -62,8 +88,9 @@ function getDetails (jar) {
  * @returns {Object, jar} links {name: <href>}
  */
 function parseLinks ({jar, details}) {
-  console.log('Parsing links')
-  fs.writeFileSync('details.html', details)
+  const total = details.match(/Canadian Company Capabilities \((\d+)\)/)[1]
+  console.log('Parsing links | total: ' + total)
+  // fs.writeFileSync('details.html', details)
 
   const results = {}
   const links = findLinks(details)
