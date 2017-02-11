@@ -9,6 +9,12 @@ const unidecode = require('unidecode')
 const write = require('write-json-file')
 const load = require('load-json-file')
 
+const headers = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
+  'Host': 'www.ic.gc.ca',
+  'Referer': 'https://www.ic.gc.ca/app/ccc/srch/'
+}
+
 /**
  * Login it to receive session credentials
  *
@@ -17,7 +23,7 @@ const load = require('load-json-file')
 function login () {
   console.log('Login')
   const jar = request.jar()
-  return request.get('https://www.ic.gc.ca/app/ccc/srch/', {jar})
+  return request.get('https://www.ic.gc.ca/app/ccc/srch/', {headers, jar})
     .then(() => jar)
 }
 
@@ -30,7 +36,7 @@ function login () {
  */
 function getDetails (jar) {
   const status = load.sync('status.json')
-  const offset = status.offset
+  const offset = (status.offset === 0) ? 1 : status.offset
   const hitsPerPage = status.hitsPerPage
   console.log('Get details | offset:', offset)
 
@@ -44,7 +50,7 @@ function getDetails (jar) {
     'searchCriteriaBean.conceptOperator': 'and',
     'searchCriteriaBean.isSummaryOn': 'N'
   }
-  return request.post('https://www.ic.gc.ca/app/ccc/srch/srch.do', {formData, jar})
+  return request.post('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, formData, jar})
     .then(details => { return {details, jar} })
 }
 
@@ -57,6 +63,7 @@ function getDetails (jar) {
  */
 function parseLinks ({jar, details}) {
   console.log('Parsing links')
+  fs.writeFileSync('details.html', details)
 
   const results = {}
   const links = findLinks(details)
@@ -116,7 +123,7 @@ function getCorporations ({links, jar}) {
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
-      request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {jar}).then(details => {
+      request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar}).then(details => {
         // Parse title to check for errors
         const title = cheerio.load(details)('title').text().trim()
         if (title.match(/Error/i)) {
