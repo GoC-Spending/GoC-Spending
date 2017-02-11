@@ -14,6 +14,7 @@ const headers = {
   'Host': 'www.ic.gc.ca',
   'Referer': 'https://www.ic.gc.ca/app/ccc/srch/'
 }
+const timeout = 5000
 
 /**
  * Login it to receive session credentials
@@ -82,7 +83,7 @@ function getDetails (jar) {
     'searchCriteriaBean.dunSuffix': '',
     'sbmtBtn': ''
   }
-  return request.get('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, qs, jar, timeout: 5000})
+  return request.get('https://www.ic.gc.ca/app/ccc/srch/srch.do', {headers, qs, jar, timeout})
     .then(details => { return {details, jar} })
 }
 
@@ -93,10 +94,10 @@ function getDetails (jar) {
  * @param {HTML} details
  * @returns {Object, jar} links {name: <href>}
  */
-function parseLinks ({jar, details}) {
+function parseLinks ({jar, details} = {}) {
+  // fs.writeFileSync('details.html', details)
   const total = details.match(/Canadian Company Capabilities \((\d+)\)/)[1]
   console.log('Parsing links | total: ' + total)
-  // fs.writeFileSync('details.html', details)
 
   const results = {}
   const links = findLinks(details)
@@ -150,13 +151,13 @@ function cleanName (name) {
  * @param {Object} links {name: <href>}
  * @param {CookieJar} jar
  */
-function getCorporations ({links, jar}) {
+function getCorporations ({links, jar} = {}) {
   console.log('Get corporations:', Object.keys(links).length)
 
   const q = d3.queue(25)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
-      request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar}).then(details => {
+      request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar, timeout}).then(details => {
         // Parse title to check for errors
         const title = cheerio.load(details)('title').text().trim()
         if (title.match(/Error/i)) {
