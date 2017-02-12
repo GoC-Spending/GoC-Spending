@@ -14,7 +14,7 @@ const headers = {
   'Host': 'www.ic.gc.ca',
   'Referer': 'https://www.ic.gc.ca/app/ccc/srch/'
 }
-const timeout = 5000
+const timeout = 10000
 
 /**
  * Login it to receive session credentials
@@ -154,7 +154,7 @@ function cleanName (name) {
 function getCorporations ({links, jar} = {}) {
   console.log('Get corporations:', Object.keys(links).length)
 
-  const q = d3.queue(25)
+  const q = d3.queue(3)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
       request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar, timeout}).then(details => {
@@ -186,7 +186,7 @@ function getCorporations ({links, jar} = {}) {
     } else {
       // Restart main app without adding any offset
       console.log(chalk.bgRed.white(errors))
-      main(jar)
+      main()
     }
   })
 }
