@@ -106,6 +106,10 @@ function parseLinks ({jar, details} = {}) {
       results[name] = href
     }
   }
+  if (links.length === 0) {
+    console.log(chalk.bgRed.white('Scraper stoped, no more results'))
+    process.exit(1)
+  }
   return new Promise(resolve => {
     console.log('Found links:', links.length)
     resolve({links: results, jar})
