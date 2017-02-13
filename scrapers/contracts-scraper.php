@@ -202,7 +202,7 @@ class DepartmentFetcher
 
 		echo "Finished " . $this->ownerAcronym . " at ". date('Y-m-d H:i:s') . " \n";
 		$timeDiff = microtime(true) - $startTime;
-		echo $this->totalContractsFetched . " " . $this->ownerAcronym . " contract pages downloaded, across $quartersFetched fiscal quarters, in $timeDiff seconds. \n\n";
+		echo $this->totalContractsFetched . " " . $this->ownerAcronym . " contract pages downloaded, across $quartersFetched fiscal quarters, in $timeDiff seconds. \n\n\n";
 
 	}
 
@@ -232,6 +232,7 @@ $departments['pwgsc'] = new DepartmentFetcher([
 	],
 ]);
 
+// Finance Department
 $departments['fin'] = new DepartmentFetcher([
 	'ownerAcronym' => 'fin',
 	'indexUrl' => 'https://www.fin.gc.ca/contracts-contrats/quarter-trimestre.aspx?lang=1',
@@ -249,10 +250,34 @@ $departments['fin'] = new DepartmentFetcher([
 	],
 ]);
 
+// Treasury Board of Canada Secretariat
+$departments['tbs'] = new DepartmentFetcher([
+	'ownerAcronym' => 'tbs',
+	'indexUrl' => 'http://www.tbs-sct.gc.ca/scripts/contracts-contrats/reports-rapports-eng.asp',
+
+	'indexSplitParameters' => [
+		'startSplit' => "<li><a href='reports-rapports-eng.asp?",
+		'endSplit' => "' title",
+		'prependString' => 'http://www.tbs-sct.gc.ca/scripts/contracts-contrats/reports-rapports-eng.asp?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => "<td><a href='reports-rapports-eng.asp?",
+		'endSplit' => "' title",
+		'prependString' => 'http://www.tbs-sct.gc.ca/scripts/contracts-contrats/reports-rapports-eng.asp?',
+	],
+]);
 
 
-// Run the fetchContracts method:
-$departments['fin']->fetchContracts();
+
+// Run the fetchContracts method for a single department:
+// $departments['tbs']->fetchContracts();
+
+// For each of the specified departments, download all their contracts:
+// For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
+foreach($departments as $department) {
+	$department->fetchContracts();
+}
 
 // No return output is needed, since it saves the files directly, and outputs logging information to the console when run.
 
