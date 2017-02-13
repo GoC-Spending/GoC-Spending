@@ -31,7 +31,7 @@ function parseHTML (html) {
 }
 
 // Create Writer
-const writer = fs.createWriteStream('metadata.json')
+const writer = fs.createWriteStream(path.join(__dirname, '..', 'corporations.json'))
 writer.write('[\n')
 
 // Loop each HTML
