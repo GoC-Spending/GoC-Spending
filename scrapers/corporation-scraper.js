@@ -158,13 +158,13 @@ function cleanName (name) {
 function getCorporations ({links, jar} = {}) {
   console.log('Get corporations:', Object.keys(links).length)
 
-  const q = d3.queue(3)
+  const q = d3.queue(1)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
       request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar, timeout}).then(details => {
         // Parse title to check for errors
         const title = cheerio.load(details)('title').text().trim()
-        if (title.match(/Error/i)) {
+        if (title.match(/Error/i) || details.match(/End Footer/) === null) {
           console.log(chalk.bgRed.white('Error:', name))
           callback(new Error('error in title'))
         } else {

@@ -10,6 +10,7 @@ for (const filename of fs.readdirSync(folder)) {
   const results = parseHTML(html)
 
   if (!Object.keys(results).length) {
+    empties++
     fs.unlinkSync(path.join(folder, filename))
   }
 }
