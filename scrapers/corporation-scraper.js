@@ -57,7 +57,7 @@ function getDetails (jar) {
     'searchCriteriaBean.hitsPerPage': hitsPerPage,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.conceptOperator': 'and',
-    'searchCriteriaBean.isSummaryOn': 'N',
+    'searchCriteriaBean.isSummaryOn': 'Y',
     'searchCriteriaBean.isExportingOrInterested': 'exportingActively',
     'searchCriteriaBean.companyName': '',
     'searchCriteriaBean.province': '',
