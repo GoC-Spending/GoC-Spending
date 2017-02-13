@@ -49,13 +49,27 @@ class DepartmentFetcher
 	
 	}
 
+
+	// For departments that use ampersands in link URLs, this seems to be necessary before retrieving the pages:
+	public static function cleanupIncomingUrl($url) {
+
+		$url = str_replace('&amp;', '&', $url);
+		return $url;
+
+	}
+
 	// Generic scraper function
 	// Retrieves a page based on the specified parameters, and splits it according to the requested start and end
 	public static function simpleScraper($indexUrl, $startSplit, $endSplit, $prependString = '', $appendString = '') {
 
 		$output = [];
 
+		$indexUrl = self::cleanupIncomingUrl($indexUrl);
+
 		$pageSource = file_get_contents($indexUrl);
+
+		// For debugging purposes when needed
+		// echo $pageSource;
 
 		$values = explode($startSplit, $pageSource);
 
@@ -77,6 +91,8 @@ class DepartmentFetcher
 	// If the same URL has already been downloaded, it avoids re-downloading it again.
 	// This makes it easier to stop and re-start the script without having to go from the very beginning again.
 	public static function downloadPage($url, $subdirectory = '') {
+
+		$url = self::cleanupIncomingUrl($url);
 
 		$pageSource = file_get_contents($url);
 		$filename = md5($url) . '.html';
@@ -167,6 +183,9 @@ class DepartmentFetcher
 
 				$this->contractUrls[] = $contractPage;
 
+				// For debugging purposes, print each contract page being downloaded:
+				// echo "Downloading $contractPage\n";
+
 				self::downloadPage($contractPage, $this->ownerAcronym);
 				$this->totalContractsFetched++;
 
@@ -213,10 +232,27 @@ $departments['pwgsc'] = new DepartmentFetcher([
 	],
 ]);
 
+$departments['fin'] = new DepartmentFetcher([
+	'ownerAcronym' => 'fin',
+	'indexUrl' => 'https://www.fin.gc.ca/contracts-contrats/quarter-trimestre.aspx?lang=1',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<li><a href="reports-rapports.aspx?',
+		'endSplit' => '">',
+		'prependString' => 'https://www.fin.gc.ca/contracts-contrats/reports-rapports.aspx?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="details.aspx?',
+		'endSplit' => '">',
+		'prependString' => 'https://www.fin.gc.ca/contracts-contrats/details.aspx?',
+	],
+]);
+
 
 
 // Run the fetchContracts method:
-$departments['pwgsc']->fetchContracts();
+$departments['fin']->fetchContracts();
 
 // No return output is needed, since it saves the files directly, and outputs logging information to the console when run.
 
