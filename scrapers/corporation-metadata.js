@@ -25,9 +25,21 @@ function parseHTML (html, filename) {
   const alternateName = html.match(/Alternate Name:.+[\n\s]+<p.+>(.+)<\/p>/i)
   if (alternateName) { results.alternateName = alternateName[1] }
 
+  // Telephone
+  const telephone = html.match(/Telephone:[\s<\/a-z>=]*"col-md-7">\s*([\(\d\) -]*)/i)
+  if (telephone) { results.telephone = telephone[1] }
+
   // Email
-  const email = html.match(/mailto:(.+)" /)
+  const email = html.match(/Email:[\s<\/a-z>=]*"col-md-7">\s*([a-z\d-@.+]+)\s*/i)
   if (email) { results.email = email[1] }
+
+  // Year Established
+  const yearEstablished = html.match(/Year Established:[\s<\/a-z>=]*"col-md-7">\s*([a-z\d-]+)\s*/i)
+  if (yearEstablished) { results.yearEstablished = Number(yearEstablished[1]) }
+
+  // Exporting
+  const exporting = html.match(/Exporting:[\s<\/a-z>=]*"col-md-7">\s*([a-z]*)/i)
+  if (exporting) { results.exporting = exporting[1] }
 
   // Website
   const website = html.match(/Website URL">(.+)<\/a>/i)
