@@ -15,6 +15,7 @@ const headers = {
   'Referer': 'https://www.ic.gc.ca/app/ccc/srch/'
 }
 const timeout = 10000
+const statusPath = path.join(__dirname, 'status.json')
 
 /**
  * Login it to receive session credentials
@@ -42,7 +43,7 @@ function login (jar) {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  const status = load.sync(path.join(__dirname, 'status.json'))
+  const status = load.sync(statusPath)
   const offset = (status.offset === 0) ? 1 : status.offset
   const hitsPerPage = status.hitsPerPage
   console.log('Get details | offset:', offset)
@@ -95,7 +96,6 @@ function getDetails (jar) {
  * @returns {Object, jar} links {name: <href>}
  */
 function parseLinks ({jar, details} = {}) {
-  // fs.writeFileSync('details.html', details)
   const total = details.match(/Canadian Company Capabilities \((\d+)\)/)[1]
   console.log('Parsing links | total: ' + total)
 
@@ -183,9 +183,9 @@ function getCorporations ({links, jar} = {}) {
   q.awaitAll(errors => {
     if (!errors) {
       // Restart main application & add 25 to offset
-      const status = load.sync(path.join(__dirname, 'status.json'))
+      const status = load.sync(statusPath)
       status.offset = status.offset + status.hitsPerPage
-      write.sync('status.json', status)
+      write.sync(statusPath, status)
       main(jar)
     } else {
       // Restart main app without adding any offset
@@ -196,8 +196,8 @@ function getCorporations ({links, jar} = {}) {
 }
 
 function main (jar) {
-  if (!fs.existsSync(path.join(__dirname, 'status.json'))) {
-    write.sync(path.join(__dirname, 'status.json'), {offset: 0})
+  if (!fs.existsSync(statusPath)) {
+    write.sync(statusPath, {offset: 0})
   }
   login(jar)
     .then(getDetails)
