@@ -6,7 +6,7 @@ Collecting data about Government of Canada spending.
 
 ### Corporations
 
-Stored as [JSON](https://github.com/GoC-Spending/GoC-Spending/blob/master/corporations.json) & CSV.
+#### [Download JSON](https://raw.githubusercontent.com/GoC-Spending/GoC-Spending/master/corporations.json)
 
 ```json
 [
@@ -28,6 +28,15 @@ Stored as [JSON](https://github.com/GoC-Spending/GoC-Spending/blob/master/corpor
   "email": "cnweber@webersfab.ca",
   "website": "http://www.webersfab.ca/",
   "filename": "(CLARE) WEBER'S FABRICATING LTD.html"
-},
-...
+}
+]
+```
+
+#### [Download CSV](https://raw.githubusercontent.com/GoC-Spending/GoC-Spending/master/corporations.csv).
+
+```csv
+"operatingName","email","website","filename","alternateName","legalName"
+"""Little Miss Chief"" Gourmet Products Inc","lmchief@telus.net","http://www.littlemisschief.com","""LITTLE MISS CHIEF"" GOURMET PRODUCTS INC.html",,
+"'DOC' Lock Inc.","martin@doclock.ca","http://www.doclock.ca","'DOC' LOCK INC.html",,
+"(Clare) Weber's Fabricating Ltd.","cnweber@webersfab.ca","http://www.webersfab.ca/","(CLARE) WEBER'S FABRICATING LTD.html","C-Max Fire Solutions",
 ```
