@@ -4,6 +4,12 @@ const path = require('path')
 // User Input
 const folder = path.join(__dirname, 'corporations')
 
+/**
+ * Parse HTML
+ *
+ * @param {string} html HTML document
+ * @return {Object} JSON result
+ */
 function parseHTML (html) {
   const results = {}
 
