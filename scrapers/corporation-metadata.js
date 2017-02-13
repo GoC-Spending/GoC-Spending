@@ -10,19 +10,19 @@ const folder = path.join(__dirname, 'corporations')
  * @param {string} html HTML document
  * @return {Object} JSON result
  */
-function parseHTML (html) {
+function parseHTML (html, filename) {
   const results = {}
 
   // Legal Name
-  const legalName = html.match(/Legal Name:.+\n.+<p>(.+)<\/p>/)
+  const legalName = html.match(/Legal Name:.+\n.+<p>(.+)<\/p>/i)
   if (legalName) { results.legalName = legalName[1] }
 
   // Operating Name
-  const operatingName = html.match(/Operating Name:.+\n.+<p>(.+)<\/p>/)
+  const operatingName = html.match(/Operating Name:.+\n.+<p>(.+)<\/p>/i)
   if (operatingName) { results.operatingName = operatingName[1] }
 
   // Alternate Name
-  const alternateName = html.match(/Alternate Name:.+[\n\s]+<p.+>(.+)<\/p>/)
+  const alternateName = html.match(/Alternate Name:.+[\n\s]+<p.+>(.+)<\/p>/i)
   if (alternateName) { results.alternateName = alternateName[1] }
 
   // Email
@@ -30,8 +30,38 @@ function parseHTML (html) {
   if (email) { results.email = email[1] }
 
   // Website
-  const website = html.match(/Website URL">(.+)<\/a>/)
+  const website = html.match(/Website URL">(.+)<\/a>/i)
   if (website) { results.website = website[1] }
+
+  // Primary Industry
+  let primaryIndustry = html.match(/Primary Industry \(NAICS\):[\s<\/a-z>=]*"col-md-7">([\sa-z\d-]+)/i)
+  if (primaryIndustry) {
+    primaryIndustry = primaryIndustry[1].trim()
+    results.primaryIndustry = primaryIndustry
+
+    // NAICS
+    const primaryIndustryNAICS = primaryIndustry.match(/\d+/)
+    if (primaryIndustryNAICS) {
+      results.primaryIndustryNAICS = Number(primaryIndustryNAICS[0])
+    }
+  }
+
+  // Alternate Industries
+  let alternateIndustry = html.match(/Alternate Industries \(NAICS\):[\s<\/a-z>=]*"col-md-7">([\sa-z\d-]+)/i)
+  if (alternateIndustry) {
+    alternateIndustry = alternateIndustry[1].trim()
+    results.alternateIndustry = alternateIndustry
+
+    // NAICS
+    const alternateIndustryNAICS = alternateIndustry.match(/\d+/)
+    if (alternateIndustryNAICS) {
+      results.alternateIndustryNAICS = Number(alternateIndustryNAICS[0])
+    }
+  }
+
+  // Primary Business Activity
+  const primaryBusinessActivity = html.match(/Primary Business Activity:[\s<\/a-z>=]*"col-md-7">([\sa-z\d-\/&;&nbsp;]+)/i)
+  if (primaryBusinessActivity) { results.primaryBusinessActivity = primaryBusinessActivity[1].replace(/&nbsp;/g, '').trim() }
 
   return results
 }
@@ -45,7 +75,7 @@ let count = 0
 const filenames = fs.readdirSync(folder)
 for (const filename of filenames) {
   const html = fs.readFileSync(path.join(folder, filename), 'utf-8')
-  const results = parseHTML(html)
+  const results = parseHTML(html, filename)
   results.filename = filename
 
   // Write JSON line
