@@ -21,7 +21,7 @@ class Configuration {
 	public static $limitContractsPerQuarter = 2;
 	public static $sleepBetweenDownloads = 0;
 	public static $redownloadExistingFiles = 0;
-	public static $outputFolder = 'output';
+	public static $outputFolder = 'contracts';
 
 }
 
