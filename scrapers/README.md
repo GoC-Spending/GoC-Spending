@@ -1,6 +1,17 @@
 # Documentation for Scrapers
 
-> Useful HTTP logs for URL requests
+## Install
+
+```bash
+$ npm install
+```
+
+## Quickstart
+
+```bash
+$ npm run scrape
+$ npm run metadata
+```
 
 ## Log in for sessions
 
