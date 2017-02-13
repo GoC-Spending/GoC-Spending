@@ -15,6 +15,7 @@ const headers = {
   'Referer': 'https://www.ic.gc.ca/app/ccc/srch/'
 }
 const timeout = 10000
+const statusPath = path.join(__dirname, 'status.json')
 
 /**
  * Login it to receive session credentials
@@ -42,7 +43,7 @@ function login (jar) {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  const status = load.sync('status.json')
+  const status = load.sync(statusPath)
   const offset = (status.offset === 0) ? 1 : status.offset
   const hitsPerPage = status.hitsPerPage
   console.log('Get details | offset:', offset)
@@ -57,7 +58,7 @@ function getDetails (jar) {
     'searchCriteriaBean.hitsPerPage': hitsPerPage,
     'searchCriteriaBean.sortSpec': 'title asc',
     'searchCriteriaBean.conceptOperator': 'and',
-    'searchCriteriaBean.isSummaryOn': 'N',
+    'searchCriteriaBean.isSummaryOn': 'Y',
     'searchCriteriaBean.isExportingOrInterested': 'exportingActively',
     'searchCriteriaBean.companyName': '',
     'searchCriteriaBean.province': '',
@@ -95,7 +96,6 @@ function getDetails (jar) {
  * @returns {Object, jar} links {name: <href>}
  */
 function parseLinks ({jar, details} = {}) {
-  // fs.writeFileSync('details.html', details)
   const total = details.match(/Canadian Company Capabilities \((\d+)\)/)[1]
   console.log('Parsing links | total: ' + total)
 
@@ -158,15 +158,15 @@ function cleanName (name) {
 function getCorporations ({links, jar} = {}) {
   console.log('Get corporations:', Object.keys(links).length)
 
-  const q = d3.queue(3)
+  const q = d3.queue(1)
   for (const [name, href] of entries(links)) {
     q.defer(callback => {
       request.get('https://www.ic.gc.ca/app/ccc/srch/' + href, {headers, jar, timeout}).then(details => {
         // Parse title to check for errors
         const title = cheerio.load(details)('title').text().trim()
-        if (title.match(/Error/i)) {
+        if (title.match(/Error/i) || details.match(/End Footer/) === null) {
           console.log(chalk.bgRed.white('Error:', name))
-          callback(new Error('error in title'))
+          callback(new Error('error in html'))
         } else {
           console.log(chalk.bgGreen.black('Saving HTML:', name))
           fs.writeFileSync(path.join(__dirname, 'corporations', name + '.html'), details)
@@ -183,9 +183,9 @@ function getCorporations ({links, jar} = {}) {
   q.awaitAll(errors => {
     if (!errors) {
       // Restart main application & add 25 to offset
-      const status = load.sync('status.json')
+      const status = load.sync(statusPath)
       status.offset = status.offset + status.hitsPerPage
-      write.sync('status.json', status)
+      write.sync(statusPath, status)
       main(jar)
     } else {
       // Restart main app without adding any offset
@@ -196,8 +196,8 @@ function getCorporations ({links, jar} = {}) {
 }
 
 function main (jar) {
-  if (!fs.existsSync('status.json')) {
-    write.sync('status.json', {offset: 0})
+  if (!fs.existsSync(statusPath)) {
+    write.sync(statusPath, {offset: 0})
   }
   login(jar)
     .then(getDetails)
