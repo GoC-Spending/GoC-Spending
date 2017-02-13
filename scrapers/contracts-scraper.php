@@ -17,10 +17,18 @@ mb_language('uni'); mb_internal_encoding('UTF-8');
 // See below for department-specific URLs and text splitting
 class Configuration {
 	
+	// Note that these should be changed before bulk-downloading all contracts
+	// Set the limitQuarters and limitContractsPerQuarter values to 0 to ignore the limit and retrieve all contracts:
 	public static $limitQuarters = 2;
 	public static $limitContractsPerQuarter = 2;
+
+	// Optionally sleep for a certain number (or fraction) of seconds in-between contract page downloads:
 	public static $sleepBetweenDownloads = 0;
+
+	// Optionally force downloading all files, including ones that have been already been downloaded:
 	public static $redownloadExistingFiles = 0;
+
+	// Output director for the contract pages (sub-categorized by owner department acronym)
 	public static $outputFolder = 'contracts';
 
 }
@@ -164,7 +172,7 @@ class DepartmentFetcher
 		$quartersFetched = 0;
 		foreach($this->quarterUrls as $quarterUrl) {
 
-			if($quartersFetched >= Configuration::$limitQuarters) {
+			if(Configuration::$limitQuarters && $quartersFetched >= Configuration::$limitQuarters) {
 				break;
 			}
 			
@@ -177,7 +185,7 @@ class DepartmentFetcher
 			$contractsFetched = 0;
 			foreach($contractPages as $contractPage) {
 
-				if($contractsFetched >= Configuration::$limitContractsPerQuarter) {
+				if(Configuration::$limitContractsPerQuarter && $contractsFetched >= Configuration::$limitContractsPerQuarter) {
 					break;
 				}
 
