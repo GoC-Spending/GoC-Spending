@@ -28,8 +28,8 @@ Collecting data about Government of Canada spending.
   "email": "cnweber@webersfab.ca",
   "website": "http://www.webersfab.ca/",
   "filename": "(CLARE) WEBER'S FABRICATING LTD.html"
-},
-...
+}
+]
 ```
 
 #### [Download CSV](https://raw.githubusercontent.com/GoC-Spending/GoC-Spending/master/corporations.csv).
