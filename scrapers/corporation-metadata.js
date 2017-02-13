@@ -1,20 +1,8 @@
 const fs = require('fs')
 const path = require('path')
-const cheerio = require('cheerio')
 
+// User Input
 const folder = path.join(__dirname, 'corporations')
-
-let empties = 0
-for (const filename of fs.readdirSync(folder)) {
-  const html = fs.readFileSync(path.join(folder, filename), 'utf-8')
-  const results = parseHTML(html)
-
-  if (!Object.keys(results).length) {
-    empties++
-    fs.unlinkSync(path.join(folder, filename))
-  }
-}
-console.log(empties)
 
 function parseHTML (html) {
   const results = {}
@@ -42,5 +30,27 @@ function parseHTML (html) {
   return results
 }
 
-// const page = fs.readFileSync(path.join(folder, '3D COURSEWARE - LES EDITIONS 3D.html'), 'utf-8')
-// parseHTML(page)
+// Create Writer
+const writer = fs.createWriteStream('metadata.json')
+writer.write('[\n')
+
+// Loop each HTML
+let count = 0
+const filenames = fs.readdirSync(folder)
+for (const filename of filenames) {
+  const html = fs.readFileSync(path.join(folder, filename), 'utf-8')
+  const results = parseHTML(html)
+  results.filename = filename
+
+  // Write JSON line
+  writer.write(JSON.stringify(results, null, 2))
+
+  // Counter
+  count++
+  if (count !== filenames.length) { writer.write(',\n') }
+  if (count % 1000 === 0) { console.log(count) }
+}
+writer.end('\n]')
+
+// // Save results to JSON
+// write.sync('metadata.json', container)

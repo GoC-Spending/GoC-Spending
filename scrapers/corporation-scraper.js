@@ -166,7 +166,7 @@ function getCorporations ({links, jar} = {}) {
         const title = cheerio.load(details)('title').text().trim()
         if (title.match(/Error/i) || details.match(/End Footer/) === null) {
           console.log(chalk.bgRed.white('Error:', name))
-          callback(new Error('error in title'))
+          callback(new Error('error in html'))
         } else {
           console.log(chalk.bgGreen.black('Saving HTML:', name))
           fs.writeFileSync(path.join(__dirname, 'corporations', name + '.html'), details)
