@@ -51,6 +51,3 @@ for (const filename of filenames) {
   if (count % 1000 === 0) { console.log(count) }
 }
 writer.end('\n]')
-
-// // Save results to JSON
-// write.sync('metadata.json', container)

@@ -1,16 +1,18 @@
 {
-  "name": "scrapers",
+  "name": "goc-spending",
   "version": "1.0.0",
-  "description": "> Useful HTTP logs for URL requests",
-  "main": "index.js",
+  "description": "Collection of datasets about Government of Canada spending",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "json2csv": "json2csv -i corporations.json > corporations.csv",
+    "scrape": "node scrapers/corporation-scraper.js",
+    "metadata": "node scrapers/corporation-metadata.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Ottawa CivicTech",
+  "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
     "d3-queue": "^3.0.3",
+    "json2csv": "^3.7.3",
     "json2csv-stream": "^0.1.3",
     "load-json-file": "^2.0.0",
     "lodash": "^4.17.4",

@@ -42,7 +42,7 @@ function login (jar) {
  * @returns {Promise<CookieJar, data>}
  */
 function getDetails (jar) {
-  const status = load.sync('status.json')
+  const status = load.sync(path.join(__dirname, 'status.json'))
   const offset = (status.offset === 0) ? 1 : status.offset
   const hitsPerPage = status.hitsPerPage
   console.log('Get details | offset:', offset)
@@ -183,7 +183,7 @@ function getCorporations ({links, jar} = {}) {
   q.awaitAll(errors => {
     if (!errors) {
       // Restart main application & add 25 to offset
-      const status = load.sync('status.json')
+      const status = load.sync(path.join(__dirname, 'status.json'))
       status.offset = status.offset + status.hitsPerPage
       write.sync('status.json', status)
       main(jar)
@@ -196,8 +196,8 @@ function getCorporations ({links, jar} = {}) {
 }
 
 function main (jar) {
-  if (!fs.existsSync('status.json')) {
-    write.sync('status.json', {offset: 0})
+  if (!fs.existsSync(path.join(__dirname, 'status.json'))) {
+    write.sync(path.join(__dirname, 'status.json'), {offset: 0})
   }
   login(jar)
     .then(getDetails)
