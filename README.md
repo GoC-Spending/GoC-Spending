@@ -2,26 +2,32 @@
 
 Collecting data about Government of Canada spending.
 
-## Scrapers
+## Data
 
-### Install
+### Corporations
 
-> Python3 only
+Stored as [JSON](https://github.com/GoC-Spending/GoC-Spending/blob/master/corporations.json) & CSV.
 
-```bash
-$ cd scrapers
-$ pip3 install -r requirements.txt
-```
-
-### Entire Database
-
-```bash
-$ python3 entire-db-scraper.py
-
-Starting scraper...
-links: 500
-Skipped: ``C Magazine``
-Skipped: (Clare) Weber's Fabricating Ltd.
-Saving HTML: 26446716 Québec Inc
+```json
+[
+{
+  "operatingName": "\"Little Miss Chief\" Gourmet Products Inc",
+  "email": "lmchief@telus.net",
+  "website": "http://www.littlemisschief.com",
+  "filename": "\"LITTLE MISS CHIEF\" GOURMET PRODUCTS INC.html"
+},
+{
+  "operatingName": "'DOC' Lock Inc.",
+  "email": "martin@doclock.ca",
+  "website": "http://www.doclock.ca",
+  "filename": "'DOC' LOCK INC.html"
+},
+{
+  "operatingName": "(Clare) Weber's Fabricating Ltd.",
+  "alternateName": "C-Max Fire Solutions",
+  "email": "cnweber@webersfab.ca",
+  "website": "http://www.webersfab.ca/",
+  "filename": "(CLARE) WEBER'S FABRICATING LTD.html"
+},
 ...
 ```
