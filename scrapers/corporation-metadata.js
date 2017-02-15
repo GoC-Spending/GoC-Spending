@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const ProgressBar = require('progress')
 
 // User Input
 const folder = path.join(__dirname, 'corporations')
@@ -50,6 +51,22 @@ function parseHTML (html, filename) {
   const website = html.match(/Website URL">(.+)<\/a>/i)
   if (website) { results.website = website[1] }
 
+  // Mailing Address
+  const matchMailingAddress = html.match(/Mailing Address:<\/h2>[\s]*<address class="mrgn-bttm-md">([\s\da-z<\/>,]*)<\/address>/i)
+  if (matchMailingAddress) {
+    const sections = matchMailingAddress[1].split(/<br\/>/g)
+    const mailingAddress = sections.map(section => section.trim().replace(/\s+/g, ' ')).join(' ')
+    results.mailingAddress = mailingAddress
+  }
+
+  // Location Address
+  const matchLocationAddress = html.match(/Location Address:<\/h2>[\s]*<address class="mrgn-bttm-md">([\s\da-z<\/>,]*)<\/address>/i)
+  if (matchLocationAddress) {
+    let sections = matchLocationAddress[1].split(/<br\/>/g)
+    const locationAddress = sections.map(section => section.trim().replace(/[\s]+/g, ' ')).join(' ')
+    results.locationAddress = locationAddress
+  }
+
   // Primary Industry
   let primaryIndustry = html.match(/Primary Industry \(NAICS\):[\s<\/a-z>=]*"col-md-7">([\sa-z\d-]+)/i)
   if (primaryIndustry) {
@@ -90,17 +107,26 @@ writer.write('[\n')
 // Loop each HTML
 let count = 0
 const filenames = fs.readdirSync(folder)
+const bar = new ProgressBar('  processing [:bar] :percent :current/:total', {
+  complete: '=',
+  incomplete: ' ',
+  width: 20,
+  total: filenames.length
+})
+
 for (const filename of filenames) {
-  const html = fs.readFileSync(path.join(folder, filename), 'utf-8')
-  const results = parseHTML(html, filename)
-  results.filename = filename
+  if (filename.match(/\.html/)) {
+    const html = fs.readFileSync(path.join(folder, filename), 'utf-8')
+    const results = parseHTML(html, filename)
+    results.filename = filename
 
-  // Write JSON line
-  writer.write(JSON.stringify(results, null, 2))
+    // Write JSON line
+    writer.write(JSON.stringify(results, null, 2))
 
-  // Counter
-  count++
-  if (count !== filenames.length) { writer.write(',\n') }
-  if (count % 1000 === 0) { console.log(count) }
+    // Counter
+    count++
+    if (count !== filenames.length) { writer.write(',\n') }
+    if (count % 250 === 0) { bar.update(count / filenames.length) }
+  }
 }
 writer.end('\n]')
