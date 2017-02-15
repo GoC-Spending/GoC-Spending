@@ -33,6 +33,11 @@ function parseHTML (html, filename) {
   const email = html.match(/Email:[\s<\/a-z>=]*"col-md-7">\s*([a-z\d-@.+]+)\s*/i)
   if (email) { results.email = email[1] }
 
+  // Email
+  const employees = html.match(/Number of Employees:[\s</a-z>]*="col-md-7">\s*([\da-z-]*)/i)
+  if (employees) {
+    results.employees = Number(employees[1])
+  }
   // Year Established
   const yearEstablished = html.match(/Year Established:[\s<\/a-z>=]*"col-md-7">\s*([a-z\d-]+)\s*/i)
   if (yearEstablished) { results.yearEstablished = Number(yearEstablished[1]) }
