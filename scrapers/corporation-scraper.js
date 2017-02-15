@@ -106,7 +106,11 @@ function parseLinks ({jar, details} = {}) {
       results[name] = href
     }
   }
+  // Scraper is finished
   if (links.length === 0) {
+    const status = load.sync(statusPath)
+    status.offset = 0
+    write.sync(statusPath, status)
     console.log(chalk.bgRed.white('Scraper stoped, no more results'))
     process.exit(1)
   }
