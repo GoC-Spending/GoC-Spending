@@ -11,7 +11,8 @@
     "corporations-json2csv": "json2csv -i corporations.json > corporations.csv",
     "corporations-upload": "aws s3 cp corporations.csv s3://goc-spending/corporations.csv && aws s3 cp corporations.json s3://goc-spending/corporations.json",
     "contracts-scrape": "php scrapers/contracts-scraper.php",
-    "contracts-metadata-pwgsc": "node scrapers/contracts-metadata-pwgsc.js"
+    "contracts-metadata-pwgsc": "node scrapers/contracts-metadata-pwgsc.js",
+    "contracts-json2csv-pwgsc": "json2csv -i contracts-pwgsc.json > contracts-pwgsc.csv"
   },
   "author": "Ottawa CivicTech",
   "license": "MIT",
