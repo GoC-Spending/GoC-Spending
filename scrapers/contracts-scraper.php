@@ -74,7 +74,7 @@ class DepartmentFetcher
 
 		$indexUrl = self::cleanupIncomingUrl($indexUrl);
 
-		$pageSource = file_get_contents($indexUrl);
+		$pageSource = self::getPage($indexUrl);
 
 		// For debugging purposes when needed
 		// echo $pageSource;
@@ -94,6 +94,28 @@ class DepartmentFetcher
 
 	}
 
+	// Download pages with SSL support
+	// Thanks to,
+	// http://stackoverflow.com/questions/14078182/openssl-file-get-contents-failed-to-enable-crypto
+	public static function getSSLPage($url) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_HEADER, false);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_SSLVERSION,3); 
+		$result = curl_exec($ch);
+		curl_close($ch);
+		return $result;
+	}
+
+	public static function getPage($url) {
+		if(substr( $string_n, 0, 5 ) === "https") {
+			return self::getSSLPage($url);
+		}
+		else {
+			return self::getPage($url);
+		}
+	}
+
 	// Generic page download function
 	// Downloads the requested URL and saves it to the specified directory
 	// If the same URL has already been downloaded, it avoids re-downloading it again.
@@ -102,7 +124,8 @@ class DepartmentFetcher
 
 		$url = self::cleanupIncomingUrl($url);
 
-		$pageSource = file_get_contents($url);
+		$pageSource = self::getPage($url);
+
 		$filename = md5($url) . '.html';
 		$directoryPath = dirname(__FILE__) . '/' . Configuration::$outputFolder;
 
