@@ -142,7 +142,7 @@ class DepartmentFetcher
 		// If that particular page has already been downloaded,
 		// don't download it again.
 		// That lets us re-start the script without starting from the very beginning again.
-		if(file_exists($filename) == false || Configuration::$redownloadExistingFiles) {
+		if(file_exists($directoryPath . '/' . $filename) == false || Configuration::$redownloadExistingFiles) {
 
 			file_put_contents($directoryPath . '/' . $filename, $pageSource);
 
