@@ -107,9 +107,35 @@ class DepartmentFetcher
 		return $result;
 	}
 
+	// Thanks to,
+	// http://php.net/manual/en/function.curl-exec.php#98628
+	function curlGet($url, array $get = NULL, array $options = array()) 
+	{    
+	    $defaults = array( 
+	        CURLOPT_URL => $url. (strpos($url, '?') === FALSE ? '?' : ''). http_build_query($get), 
+	        CURLOPT_HEADER => 0, 
+	        CURLOPT_RETURNTRANSFER => TRUE, 
+	        CURLOPT_TIMEOUT => 4 
+	    ); 
+	    
+	    $ch = curl_init(); 
+	    curl_setopt_array($ch, ($options + $defaults)); 
+	    if( ! $result = curl_exec($ch)) 
+	    { 
+	        trigger_error(curl_error($ch)); 
+	    } 
+	    curl_close($ch); 
+
+	    var_dump($result);
+	    return $result; 
+	} 
+
 	public static function getPage($url) {
+
+		var_dump($url);
+
 		if(substr($url, 0, 5) === "https") {
-			return self::getSSLPage($url);
+			return self::curlGet($url);
 		}
 		else {
 			return file_get_contents($url);
@@ -301,8 +327,14 @@ $departments['tbs'] = new DepartmentFetcher([
 
 
 
+
+
+// var_dump(curl_get('https://www.fin.gc.ca/contracts-contrats/quarter-trimestre.aspx?lang=1'));
+// exit();
+
 // Run the fetchContracts method for a single department:
-// $departments['tbs']->fetchContracts();
+$departments['fin']->fetchContracts();
+exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
