@@ -112,7 +112,7 @@ class DepartmentFetcher
 			return self::getSSLPage($url);
 		}
 		else {
-			return self::getPage($url);
+			return file_get_contents($url);
 		}
 	}
 
