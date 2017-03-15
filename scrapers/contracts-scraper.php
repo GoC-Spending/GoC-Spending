@@ -108,7 +108,7 @@ class DepartmentFetcher
 	}
 
 	public static function getPage($url) {
-		if(substr( $string_n, 0, 5 ) === "https") {
+		if(substr($url, 0, 5) === "https") {
 			return self::getSSLPage($url);
 		}
 		else {
