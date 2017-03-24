@@ -1,6 +1,4 @@
 <?php
-mb_language('uni'); mb_internal_encoding('UTF-8');
-
 // A simple script to retrieve all proactive disclosure contract pages
 // from the PWGSC website, and store them in an "output" folder.
 // Depending on your folder permissions, you may have to create the
@@ -11,6 +9,17 @@ mb_language('uni'); mb_internal_encoding('UTF-8');
 // and doesn't do any actual scraping and analysis.
 
 // toobs2017@gmail.com and the GoC-Spending team!
+
+// Require Guzzle, via composer package
+// Note that the vendor directory is one level up
+require dirname(__FILE__) . '/../vendor/autoload.php';
+use GuzzleHttp\Client;
+
+// These aren't required in PHP 7+
+if(function_exists('mb_language')) {
+	mb_language('uni'); mb_internal_encoding('UTF-8');
+}
+
 
 
 // General fetcher configuration (across all departments)
@@ -36,6 +45,8 @@ class Configuration {
 // Per-department fetcher class
 class DepartmentFetcher
 {
+	public $guzzleClient;
+
 	public $ownerAcronym;
 	public $indexUrl;
 	public $indexSplitParameters;
@@ -46,6 +57,7 @@ class DepartmentFetcher
 	public $contractUrls;
 	
 	public $totalContractsFetched = 0;
+	public $totalAlreadyDownloaded = 0;
 
 	// Initialize new instances:
 	function __construct($detailsArray) {
@@ -54,6 +66,8 @@ class DepartmentFetcher
 		$this->indexUrl = $detailsArray['indexUrl'];
 		$this->indexSplitParameters = $detailsArray['indexSplitParameters'];
 		$this->quarterSplitParameters = $detailsArray['quarterSplitParameters'];
+
+		$this->guzzleClient = new Client;
 	
 	}
 
@@ -68,13 +82,13 @@ class DepartmentFetcher
 
 	// Generic scraper function
 	// Retrieves a page based on the specified parameters, and splits it according to the requested start and end
-	public static function simpleScraper($indexUrl, $startSplit, $endSplit, $prependString = '', $appendString = '') {
+	public function simpleScraper($indexUrl, $startSplit, $endSplit, $prependString = '', $appendString = '') {
 
 		$output = [];
 
 		$indexUrl = self::cleanupIncomingUrl($indexUrl);
 
-		$pageSource = self::getPage($indexUrl);
+		$pageSource = $this->getPage($indexUrl);
 
 		// For debugging purposes when needed
 		// echo $pageSource;
@@ -94,63 +108,20 @@ class DepartmentFetcher
 
 	}
 
-	// Download pages with SSL support
-	// Thanks to,
-	// http://stackoverflow.com/questions/14078182/openssl-file-get-contents-failed-to-enable-crypto
-	public static function getSSLPage($url) {
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_SSLVERSION,3); 
-		$result = curl_exec($ch);
-		curl_close($ch);
-		return $result;
-	}
-
-	// Thanks to,
-	// http://php.net/manual/en/function.curl-exec.php#98628
-	function curlGet($url, array $get = NULL, array $options = array()) 
-	{    
-	    $defaults = array( 
-	        CURLOPT_URL => $url. (strpos($url, '?') === FALSE ? '?' : ''). http_build_query($get), 
-	        CURLOPT_HEADER => 0, 
-	        CURLOPT_RETURNTRANSFER => TRUE, 
-	        CURLOPT_TIMEOUT => 4 
-	    ); 
-	    
-	    $ch = curl_init(); 
-	    curl_setopt_array($ch, ($options + $defaults)); 
-	    if( ! $result = curl_exec($ch)) 
-	    { 
-	        trigger_error(curl_error($ch)); 
-	    } 
-	    curl_close($ch); 
-
-	    var_dump($result);
-	    return $result; 
-	} 
-
-	public static function getPage($url) {
-
-		var_dump($url);
-
-		if(substr($url, 0, 5) === "https") {
-			return self::curlGet($url);
-		}
-		else {
-			return file_get_contents($url);
-		}
+	// Get a page using the Guzzle library
+	// No longer a static function since we're reusing the client object between requests:
+	public function getPage($url) {
+		$response = $this->guzzleClient->request('GET', $url);
+		return $response->getBody();
 	}
 
 	// Generic page download function
 	// Downloads the requested URL and saves it to the specified directory
 	// If the same URL has already been downloaded, it avoids re-downloading it again.
 	// This makes it easier to stop and re-start the script without having to go from the very beginning again.
-	public static function downloadPage($url, $subdirectory = '') {
+	public function downloadPage($url, $subdirectory = '') {
 
 		$url = self::cleanupIncomingUrl($url);
-
-		$pageSource = self::getPage($url);
 
 		$filename = md5($url) . '.html';
 		$directoryPath = dirname(__FILE__) . '/' . Configuration::$outputFolder;
@@ -170,6 +141,10 @@ class DepartmentFetcher
 		// That lets us re-start the script without starting from the very beginning again.
 		if(file_exists($directoryPath . '/' . $filename) == false || Configuration::$redownloadExistingFiles) {
 
+			// Download the page in question:
+			$pageSource = $this->getPage($url);
+
+			// Store it to a local location:
 			file_put_contents($directoryPath . '/' . $filename, $pageSource);
 
 			// Optionally sleep for a certain amount of time (eg. 0.1 seconds) in between fetches to avoid angry sysadmins:
@@ -181,6 +156,7 @@ class DepartmentFetcher
 
 		}
 		else {
+			$this->totalAlreadyDownloaded += 1;
 			return false;
 		}
 
@@ -190,7 +166,7 @@ class DepartmentFetcher
 	// Retrieve the original reports index page, which lists links to fiscal quarter report pages:
 	public function fetchIndexPage() {
 
-		return self::simpleScraper($this->indexUrl, $this->indexSplitParameters['startSplit'], $this->indexSplitParameters['endSplit'], $this->indexSplitParameters['prependString']);
+		return $this->simpleScraper($this->indexUrl, $this->indexSplitParameters['startSplit'], $this->indexSplitParameters['endSplit'], $this->indexSplitParameters['prependString']);
 
 
 	}
@@ -199,7 +175,7 @@ class DepartmentFetcher
 	// Retrieve a "quarters" page that lists all contracts in that fiscal quarter:
 	public function fetchQuarterPage($quarterUrl) {
 
-		return self::simpleScraper($quarterUrl, $this->quarterSplitParameters['startSplit'], $this->quarterSplitParameters['endSplit'], $this->quarterSplitParameters['prependString']);
+		return $this->simpleScraper($quarterUrl, $this->quarterSplitParameters['startSplit'], $this->quarterSplitParameters['endSplit'], $this->quarterSplitParameters['prependString']);
 
 
 	}
@@ -211,7 +187,8 @@ class DepartmentFetcher
 	public function fetchContracts() {
 
 		// Run the operation!
-		echo "Starting " . $this->ownerAcronym . " at ". date('Y-m-d H:i:s') . " \n\n";
+		$startDate = date('Y-m-d H:i:s');
+		echo "Starting " . $this->ownerAcronym . " at ". $startDate . " \n\n";
 		$startTime = microtime(true);
 
 		// 1. Get all the URLs of the "quarters" pages from the index page:
@@ -243,7 +220,7 @@ class DepartmentFetcher
 				// For debugging purposes, print each contract page being downloaded:
 				// echo "Downloading $contractPage\n";
 
-				self::downloadPage($contractPage, $this->ownerAcronym);
+				$this->downloadPage($contractPage, $this->ownerAcronym);
 				$this->totalContractsFetched++;
 
 				$contractsFetched++;
@@ -257,9 +234,10 @@ class DepartmentFetcher
 		}
 
 
-		echo "Finished " . $this->ownerAcronym . " at ". date('Y-m-d H:i:s') . " \n";
+		echo "Started " . $this->ownerAcronym . " at " . $startDate . "\n";
+		echo "Finished at ". date('Y-m-d H:i:s') . " \n";
 		$timeDiff = microtime(true) - $startTime;
-		echo $this->totalContractsFetched . " " . $this->ownerAcronym . " contract pages downloaded, across $quartersFetched fiscal quarters, in $timeDiff seconds. \n\n\n";
+		echo $this->totalContractsFetched . " " . $this->ownerAcronym . " contract pages downloaded (" . $this->totalAlreadyDownloaded . " already retrieved), across $quartersFetched fiscal quarters, in $timeDiff seconds. \n=================================\n\n";
 
 	}
 
@@ -328,13 +306,9 @@ $departments['tbs'] = new DepartmentFetcher([
 
 
 
-
-// var_dump(curl_get('https://www.fin.gc.ca/contracts-contrats/quarter-trimestre.aspx?lang=1'));
-// exit();
-
 // Run the fetchContracts method for a single department:
-$departments['fin']->fetchContracts();
-exit();
+// $departments['fin']->fetchContracts();
+// exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
