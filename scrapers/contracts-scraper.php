@@ -109,9 +109,13 @@ class DepartmentFetcher
 	}
 
 	// Get a page using the Guzzle library
-	// No longer a static function since we're reusing the client object between requests:
+	// No longer a static function since we're reusing the client object between requests.
+	// Ignores SSL verification per http://stackoverflow.com/a/32707976/756641
 	public function getPage($url) {
-		$response = $this->guzzleClient->request('GET', $url);
+		$response = $this->guzzleClient->request('GET', $url,
+			[
+				'verify' => false,
+			]);
 		return $response->getBody();
 	}
 
