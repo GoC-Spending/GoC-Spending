@@ -10,6 +10,9 @@
 
 // toobs2017@gmail.com and the GoC-Spending team!
 
+// Sample background usage:
+// php scrapers/contracts-scraper.php > scraper-results.log 2>&1 &
+
 // Require Guzzle, via composer package
 // Note that the vendor directory is one level up
 require dirname(__FILE__) . '/../vendor/autoload.php';
@@ -304,6 +307,24 @@ $departments['tbs'] = new DepartmentFetcher([
 		'startSplit' => "<td><a href='reports-rapports-eng.asp?",
 		'endSplit' => "' title",
 		'prependString' => 'http://www.tbs-sct.gc.ca/scripts/contracts-contrats/reports-rapports-eng.asp?',
+	],
+]);
+
+// Service Canada
+$departments['sc'] = new DepartmentFetcher([
+	'ownerAcronym' => 'sc',
+	'indexUrl' => 'http://disclosure.servicecanada.gc.ca/dp-pd/prdlstcdn-eng.jsp?site=3&section=2',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="smmrcdn-eng.jsp?',
+		'endSplit' => '">',
+		'prependString' => 'http://disclosure.servicecanada.gc.ca/dp-pd/smmrcdn-eng.jsp?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="dtlcdn-eng.jsp?',
+		'endSplit' => '" title="',
+		'prependString' => 'http://disclosure.servicecanada.gc.ca/dp-pd/dtlcdn-eng.jsp?',
 	],
 ]);
 
