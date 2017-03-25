@@ -373,11 +373,46 @@ $departments['csa'] = new DepartmentFetcher([
 	],
 ]);
 
+// Agriculture and Agri-Food Canada
+$departments['agr'] = new DepartmentFetcher([
+	'ownerAcronym' => 'agr',
+	'indexUrl' => 'http://www.agr.gc.ca/eng/about-us/planning-and-reporting/proactive-disclosure/disclosure-of-contracts-over-10000/?id=1353352471596',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<li><a href="/eng/about-us/planning-and-reporting/proactive-disclosure/disclosure-of-contracts-over-10000/aafc-disclosure-of-contract-reports/?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.agr.gc.ca/eng/about-us/planning-and-reporting/proactive-disclosure/disclosure-of-contracts-over-10000/aafc-disclosure-of-contract-reports/?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<td><a href="/eng/?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.agr.gc.ca/eng/?',
+	],
+]);
+
+// Infrastructure Canada
+$departments['infra'] = new DepartmentFetcher([
+	'ownerAcronym' => 'infra',
+	'indexUrl' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+	],
+]);
 
 
 
 // Run the fetchContracts method for a single department:
-// $departments['csa']->fetchContracts();
+// $departments['infra']->fetchContracts();
 // exit();
 
 // For each of the specified departments, download all their contracts:
