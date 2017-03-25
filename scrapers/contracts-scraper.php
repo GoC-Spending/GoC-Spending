@@ -182,7 +182,28 @@ class DepartmentFetcher
 	// Retrieve a "quarters" page that lists all contracts in that fiscal quarter:
 	public function fetchQuarterPage($quarterUrl) {
 
-		return $this->simpleScraper($quarterUrl, $this->quarterSplitParameters['startSplit'], $this->quarterSplitParameters['endSplit'], $this->quarterSplitParameters['prependString']);
+		// If the page has server-side pagination, retrieve all the contract pages
+		if(isset($this->quarterSplitParameters['multiPage']) && $this->quarterSplitParameters['multiPage']) {
+
+			$multiPageQuarterUrls = $this->simpleScraper($quarterUrl, $this->quarterSplitParameters['multiPage']['startSplit'], $this->quarterSplitParameters['multiPage']['endSplit'], $this->quarterSplitParameters['multiPage']['prependString']);
+
+			// If the original quarter page ("page 1") also includes contract links, include it too:
+			if(isset($this->quarterSplitParameters['multiPage']['includeOriginal']) && $this->quarterSplitParameters['multiPage']['includeOriginal']) {
+				$multiPageQuarterUrls = array_merge([$quarterUrl], $multiPageQuarterUrls);
+			}
+
+			// For each of the pages, run the normal scraper and merge the contract URLs together in an array:
+			$contractUrls = [];
+			foreach($multiPageQuarterUrls as $multiPageQuarterUrl) {
+				$contractUrls = array_merge($contractUrls, $this->simpleScraper($multiPageQuarterUrl, $this->quarterSplitParameters['startSplit'], $this->quarterSplitParameters['endSplit'], $this->quarterSplitParameters['prependString']));
+			}
+			return $contractUrls;
+		}
+		else {
+			// All the contracts for that quarter are on one page?
+			// Much simpler:
+			return $this->simpleScraper($quarterUrl, $this->quarterSplitParameters['startSplit'], $this->quarterSplitParameters['endSplit'], $this->quarterSplitParameters['prependString']);
+		}
 
 
 	}
@@ -328,11 +349,35 @@ $departments['sc'] = new DepartmentFetcher([
 	],
 ]);
 
+// Canadian Space Agency
+$departments['csa'] = new DepartmentFetcher([
+	'ownerAcronym' => 'csa',
+	'indexUrl' => 'http://www.asc-csa.gc.ca/eng/publications/contracts.asp',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/eng/publications/contracts-list.asp?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.asc-csa.gc.ca/eng/publications/contracts-list.asp?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a class="linkContenu" href="/eng/publications/contracts-details.asp?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.asc-csa.gc.ca/eng/publications/contracts-details.asp?',
+		'multiPage' => [
+			'startSplit' => '<a class="linkContenu" href="/eng/publications/contracts-list.asp?',
+			'endSplit' => '">',
+			'prependString' => 'http://www.asc-csa.gc.ca/eng/publications/contracts-list.asp?',
+			'includeOriginal' => 1,
+		],
+	],
+]);
+
 
 
 
 // Run the fetchContracts method for a single department:
-// $departments['fin']->fetchContracts();
+// $departments['csa']->fetchContracts();
 // exit();
 
 // For each of the specified departments, download all their contracts:
