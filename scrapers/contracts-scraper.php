@@ -394,8 +394,8 @@ $departments['agr'] = new DepartmentFetcher([
 
 
 // Run the fetchContracts method for a single department:
-$departments['agr']->fetchContracts();
-exit();
+// $departments['agr']->fetchContracts();
+// exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
