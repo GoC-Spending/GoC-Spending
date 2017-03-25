@@ -391,10 +391,28 @@ $departments['agr'] = new DepartmentFetcher([
 	],
 ]);
 
+// Infrastructure Canada
+$departments['infra'] = new DepartmentFetcher([
+	'ownerAcronym' => 'infra',
+	'indexUrl' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.infrastructure.gc.ca/pd-dp/pdc-dpm/reports-rapports-eng.html?',
+	],
+]);
+
 
 
 // Run the fetchContracts method for a single department:
-// $departments['agr']->fetchContracts();
+// $departments['infra']->fetchContracts();
 // exit();
 
 // For each of the specified departments, download all their contracts:
