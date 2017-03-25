@@ -34,6 +34,15 @@ class Configuration {
 	public static $limitQuarters = 2;
 	public static $limitContractsPerQuarter = 2;
 
+	public static $departmentsToSkip = [
+		'pwgsc',
+		'sc',
+		'tbs',
+		'fin',
+		'csa',
+		'ic',
+	];
+
 	// Optionally sleep for a certain number (or fraction) of seconds in-between contract page downloads:
 	public static $sleepBetweenDownloads = 0;
 
@@ -414,6 +423,7 @@ $departments['infra'] = new DepartmentFetcher([
 // The Industry Canada URLs include jsessionid's, eg.,
 // <a href="/app/scr/ic/cr/contracts.html;jsessionid=0001h2cXWEaa3bw9j7GupUeSrHY:3A6HTFA47L?id=2">April 1
 // so skipping the ending ? in the split strings helps.
+// Note however that this breaks the URL hash -based download filenames, since each run will have a different jsessionid and thus URL. :/ 
 $departments['ic'] = new DepartmentFetcher([
 	'ownerAcronym' => 'ic',
 	'indexUrl' => 'https://www.ic.gc.ca/app/scr/ic/cr/quarters.html?lang=eng',
@@ -440,7 +450,13 @@ $departments['ic'] = new DepartmentFetcher([
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
 foreach($departments as $department) {
-	$department->fetchContracts();
+	if(in_array($department->ownerAcronym, Configuration::$departmentsToSkip)) {
+		echo "Skipping " . $department->ownerAcronym . "\n";
+	}
+	else {
+		$department->fetchContracts();
+	}
+	
 }
 
 // No return output is needed, since it saves the files directly, and outputs logging information to the console when run.
