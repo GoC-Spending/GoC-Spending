@@ -173,8 +173,9 @@ class DepartmentFetcher
 	// Retrieve the original reports index page, which lists links to fiscal quarter report pages:
 	public function fetchIndexPage() {
 
-		return $this->simpleScraper($this->indexUrl, $this->indexSplitParameters['startSplit'], $this->indexSplitParameters['endSplit'], $this->indexSplitParameters['prependString']);
+		$quarterUrls = $this->simpleScraper($this->indexUrl, $this->indexSplitParameters['startSplit'], $this->indexSplitParameters['endSplit'], $this->indexSplitParameters['prependString']);
 
+		return $quarterUrls;
 
 	}
 
@@ -409,10 +410,31 @@ $departments['infra'] = new DepartmentFetcher([
 	],
 ]);
 
+// Industry Canada / Innovation, Science and Economic Development Canada
+// The Industry Canada URLs include jsessionid's, eg.,
+// <a href="/app/scr/ic/cr/contracts.html;jsessionid=0001h2cXWEaa3bw9j7GupUeSrHY:3A6HTFA47L?id=2">April 1
+// so skipping the ending ? in the split strings helps.
+$departments['ic'] = new DepartmentFetcher([
+	'ownerAcronym' => 'ic',
+	'indexUrl' => 'https://www.ic.gc.ca/app/scr/ic/cr/quarters.html?lang=eng',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/app/scr/ic/cr/contracts.html',
+		'endSplit' => '">',
+		'prependString' => 'https://www.ic.gc.ca/app/scr/ic/cr/contracts.html',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="/app/scr/ic/cr/contract.html',
+		'endSplit' => '">',
+		'prependString' => 'https://www.ic.gc.ca/app/scr/ic/cr/contract.html',
+	],
+]);
+
 
 
 // Run the fetchContracts method for a single department:
-// $departments['infra']->fetchContracts();
+// $departments['ic']->fetchContracts();
 // exit();
 
 // For each of the specified departments, download all their contracts:
