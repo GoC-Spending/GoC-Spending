@@ -5,18 +5,12 @@
 // "output" folder as a subdirectory before running this script.
 // Estimated runtime is at least an hour on a home internet connection.
 
-// This script only retrieves and stores the PWGSC contract pages,
-// and doesn't do any actual scraping and analysis.
+// This script retrieves the contracts downloaded by contract-scraper.php
+// And parses the data values contained in their HTML tables.
+// A future update should merge these together, to do both operations in one pass.
 
 // toobs2017@gmail.com and the GoC-Spending team!
 
-// Sample background usage:
-// php scrapers/contracts-scraper.php > scraper-results.log 2>&1 &
-
-// Require Guzzle, via composer package
-// Note that the vendor directory is one level up
-require dirname(__FILE__) . '/../vendor/autoload.php';
-use GuzzleHttp\Client;
 
 // These aren't required in PHP 7+
 if(function_exists('mb_language')) {
@@ -28,9 +22,13 @@ class Configuration {
 	public static $rawHtmlFolder = 'contracts';
 	
 	public static $jsonOutputFile = 'contracts-output.json';
+	
+	public static $departmentsToSkip = [
+		// 'agr',
+	];
 
-	public static $limitDepartments = 1;
-	public static $limitFiles = 0;
+	public static $limitDepartments = 2;
+	public static $limitFiles = 3;
 
 }
 
@@ -86,7 +84,7 @@ class DepartmentParser {
 			return $time;
 		}
 		else {
-			dd("Date cleanup error: '$dateInput'");
+			echo "Date cleanup error: '$dateInput'\n";
 			return false;
 		}
 		
@@ -110,6 +108,30 @@ class DepartmentParser {
 
 		$output = str_replace(['$', ','], '', $input);
 		return floatval($output);
+
+	}
+
+	public static function cleanHtmlValue($value) {
+
+		$value = str_replace('&nbsp;', ' ', $value);
+		$value = trim(strip_tags($value));
+		return $value;
+
+	}
+
+	public static function switchMonthsAndDays($dateString) {
+		// Takes a YYYY-DD-MM (whyyyy, CSA?)
+		// and changes it to YYYY-MM-DD
+
+		$split = explode('-', $dateString);
+		if(count($split) == 3) {
+			return $split[0] . '-' . $split[2] . '-' . $split[1];
+		}
+		else {
+			echo "Error: could not switchMonthsAndDays for '$dateString'\n";
+			return false;
+		}
+		
 
 	}
 
@@ -155,6 +177,9 @@ class DepartmentParser {
 
 			// Useful for troubleshooting:
 			$fileValues['sourceFilename'] = $this->acronym . '/' . $file;
+			
+			// TODO - update this to match the schema discussed at 2017-03-28's Civic Tech!
+			$fileValues['uuid'] = $this->acronym . '-' . $fileValues['referenceNumber'];
 
 
 			$referenceNumber = $fileValues['referenceNumber'];
@@ -242,6 +267,11 @@ class DepartmentParser {
 		$departmentsParsed = 0;
 		foreach($departments as $acronym) {
 
+			if(in_array($acronym, Configuration::$departmentsToSkip)) {
+				echo "Skipping " . $acronym . "\n";
+				continue;
+			}
+
 			if(Configuration::$limitDepartments && $departmentsParsed >= Configuration::$limitDepartments) {
 				break;
 			}
@@ -320,6 +350,97 @@ class FileParser {
 			$values['contractPeriodStart'] = $split[0];
 			$values['contractPeriodEnd'] = $split[1];
 		}
+
+		return $values;
+
+	}
+
+	public static function csa($html) {
+
+		// var_dump($html);
+
+		$values = [];
+
+		$keys = [
+			'vendorName',
+			'referenceNumber',
+			'description',
+			'deliveryDate',
+			'contractValue',
+			'comments',
+		];
+
+		$keysWithModifications = [
+			'vendorName',
+			'referenceNumber',
+			'description',
+			'deliveryDate',
+			'originalValue',
+			'modificationValue',
+			'contractValue',
+			'comments',
+		];
+
+		$matches = [];
+		$pattern = '/<td class="align-middle">([\w-@$#%^&+.,;:<\/>\s]*)<\/td>/';
+
+		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
+
+		// var_dump($matches);
+
+		if(count($matches) == 8) {
+			$keys = $keysWithModifications;
+		}
+
+		foreach($matches as $index => $match) {
+
+			$value = $match[1];
+
+			if(array_key_exists($index, $keys)) {
+
+				$value = DepartmentParser::cleanHtmlValue($value);
+
+				$values[$keys[$index]] = $value;
+
+			}
+
+		}
+
+		// Interestingly, the decimal points for CSA are commas rather than periods (probably coded in French originally).
+		if(isset($values['originalValue'])) {
+			$values['originalValue'] = str_replace([',', ' '], ['.', ''], $values['originalValue']);
+		}
+		if(isset($values['contractValue'])) {
+			$values['contractValue'] = str_replace([',', ' '], ['.', ''], $values['contractValue']);
+		}
+		if(isset($values['modificationValue'])) {
+			$values['modificationValue'] = str_replace([',', ' ', '$'], ['.', '', ''], $values['modificationValue']);
+		}
+
+		
+
+
+		// If there isn't an originalValue, use the contractValue
+		if(! (isset($values['originalValue']) && $values['originalValue'])) {
+			$values['originalValue'] = $values['contractValue'];
+		}
+
+		// Do a separate regular expression to retrieve the time values
+		// The first one is the contract date, and the second two are the start and end dates
+		// For the contract period (the second two values), these are inexplicably in YYYY-DD-MMM format (eg. 2011-31-003)
+		$matches = [];
+		$pattern = '/<time datetime="([\w-@$#%^&+.,;:<\/>\s]*)">/';
+
+		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
+
+		// var_dump($matches);
+
+		$values['contractDate'] = $matches[0][1];
+		// Fix the date issue while we're at it:
+		$values['contractPeriodStart'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[1][1]));
+		$values['contractPeriodEnd'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[2][1]));
+
+		// var_dump($values);
 
 		return $values;
 
