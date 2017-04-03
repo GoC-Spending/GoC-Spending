@@ -27,8 +27,8 @@ class Configuration {
 		// 'agr',
 	];
 
-	public static $limitDepartments = 2;
-	public static $limitFiles = 3;
+	public static $limitDepartments = 1;
+	public static $limitFiles = 0;
 
 }
 
@@ -382,7 +382,7 @@ class FileParser {
 		];
 
 		$matches = [];
-		$pattern = '/<td class="align-middle">([\w-@$#%^&+.,;:<\/>\s]*)<\/td>/';
+		$pattern = '/<td class="align-middle">([\w-@$#%^&+.\'(),;:<\/>\s]*)<\/td>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
