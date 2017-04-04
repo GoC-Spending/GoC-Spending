@@ -11,11 +11,7 @@
 
 // toobs2017@gmail.com and the GoC-Spending team!
 
-
-// These aren't required in PHP 7+
-if(function_exists('mb_language')) {
-	mb_language('uni'); mb_internal_encoding('UTF-8');
-}
+require('contracts-helpers.php');
 
 // Go crazy!
 ini_set('memory_limit', '512M');
@@ -82,94 +78,15 @@ class DepartmentParser {
 
 	}
 
-	public static function cleanupDate($dateInput) {
-
-		// 11/1/2013
-		$time = strtotime($dateInput);
-		if($time) {
-			return $time;
-		}
-		else {
-			// Try doing the month switch and see if that helps:
-			if($dateInput) {
-				$time = strtotime(self::switchMonthsAndDays($dateInput));
-				if($time) {
-					echo "Switched months and days for: '$dateInput'\n";
-					return $time;
-				}
-				else {
-					echo "Date cleanup error: '$dateInput'\n";
-				}
-			}
-			// If there's no $dateInput at all, don't print an error:
-			return false;
-		}
-		
-
-
-	}
-
-	public static function dateToYear($dateInput) {
-
-		$time = self::cleanupDate($dateInput);
-		if($time) {
-			return date('Y', $time);
-		}
-		else {
-			return false;
-		}
-
-	}
-
-	public static function cleanupContractValue($input) {
-
-		$output = str_replace(['$', ','], '', $input);
-		return floatval($output);
-
-	}
-
-	public static function cleanHtmlValue($value) {
-
-		$value = str_replace('&nbsp;', ' ', $value);
-		$value = trim(strip_tags($value));
-		return $value;
-
-	}
-
-	public static function switchMonthsAndDays($dateString) {
-		// Takes a YYYY-DD-MM (whyyyy, CSA?)
-		// and changes it to YYYY-MM-DD
-
-		$split = explode('-', $dateString);
-		if(count($split) == 3) {
-			return $split[0] . '-' . $split[2] . '-' . $split[1];
-		}
-		else {
-			echo "Error: could not switchMonthsAndDays for '$dateString'\n";
-			return false;
-		}
-		
-
-	}
-
-	public static function stringBetween($start, $end, $string) {
-
-		if(! $string) {
-			return '';
-		}
-
-		$split = explode($start, $string);
-		return explode($end, $split[1])[0];
-
-	}
+	
 
 	public static function cleanParsedArray(&$values) {
 
-		$values['startYear'] = self::dateToYear($values['contractPeriodStart']);
-		$values['endYear'] = self::dateToYear($values['contractPeriodEnd']);
+		$values['startYear'] = Helpers::dateToYear($values['contractPeriodStart']);
+		$values['endYear'] = Helpers::dateToYear($values['contractPeriodEnd']);
 
-		$values['originalValue'] = self::cleanupContractValue($values['originalValue']);
-		$values['contractValue'] = self::cleanupContractValue($values['contractValue']);
+		$values['originalValue'] = Helpers::cleanupContractValue($values['originalValue']);
+		$values['contractValue'] = Helpers::cleanupContractValue($values['contractValue']);
 	}
 
 	public function parseDepartment() {
@@ -395,7 +312,7 @@ class FileParser {
 	public static function csa($html) {
 
 		// Just get the table in the middle:
-		$html = DepartmentParser::stringBetween('DEBUT DU CONTENU', 'FIN DU CONTENU', $html);
+		$html = Helpers::stringBetween('DEBUT DU CONTENU', 'FIN DU CONTENU', $html);
 
 		$values = [];
 
@@ -436,7 +353,7 @@ class FileParser {
 
 			if(array_key_exists($index, $keys)) {
 
-				$value = DepartmentParser::cleanHtmlValue($value);
+				$value = Helpers::cleanHtmlValue($value);
 
 				$values[$keys[$index]] = $value;
 
@@ -477,10 +394,10 @@ class FileParser {
 
 		// Fix the date issue while we're at it:
 		if(isset($matches[1][1])) {
-			$values['contractPeriodStart'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[1][1]));
+			$values['contractPeriodStart'] = Helpers::switchMonthsAndDays(str_replace('-00', '-0', $matches[1][1]));
 		}
 		if(isset($matches[2][1])) {
-			$values['contractPeriodEnd'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[2][1]));
+			$values['contractPeriodEnd'] = Helpers::switchMonthsAndDays(str_replace('-00', '-0', $matches[2][1]));
 		}
 		
 		
@@ -493,7 +410,7 @@ class FileParser {
 
 	public static function fin($html) {
 
-		$html = DepartmentParser::stringBetween('MainContentStart', 'MainContentEnd', $html);
+		$html = Helpers::stringBetween('MainContentStart', 'MainContentEnd', $html);
 
 		$values = [];
 		$keyToLabel = [
@@ -547,7 +464,7 @@ class FileParser {
 
 	public static function ic($html) {
 
-		$html = DepartmentParser::stringBetween('<div typeof="Action">', '<p class="notPrintable">', $html);
+		$html = Helpers::stringBetween('<div typeof="Action">', '<p class="notPrintable">', $html);
 
 		// Remove spans that are kind of un-helpful
 		$html = str_replace([
