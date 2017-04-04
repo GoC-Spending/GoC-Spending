@@ -21,14 +21,15 @@ class Configuration {
 
 	public static $rawHtmlFolder = 'contracts';
 	
-	public static $jsonOutputFile = 'contracts-output.json';
+	public static $jsonOutputFile = 'contracts-output-test.json';
 	
 	public static $departmentsToSkip = [
-		// 'agr',
+		'agr',
+		'csa',
 	];
 
-	public static $limitDepartments = 2;
-	public static $limitFiles = 0;
+	public static $limitDepartments = 1;
+	public static $limitFiles = 3;
 
 }
 
@@ -179,46 +180,55 @@ class DepartmentParser {
 			// Just to guarantee that all the array keys are around:
 			$fileValues = array_merge(self::$rowParams, $this->parseFile($file));
 
-			self::cleanParsedArray($fileValues);
-			// var_dump($fileValues);
+			if($fileValues) {
 
-			$fileValues['ownerAcronym'] = $this->acronym;
+				self::cleanParsedArray($fileValues);
+				// var_dump($fileValues);
 
-			// Useful for troubleshooting:
-			$fileValues['sourceFilename'] = $this->acronym . '/' . $file;
-			
-			// TODO - update this to match the schema discussed at 2017-03-28's Civic Tech!
-			$fileValues['uuid'] = $this->acronym . '-' . $fileValues['referenceNumber'];
+				$fileValues['ownerAcronym'] = $this->acronym;
+
+				// Useful for troubleshooting:
+				$fileValues['sourceFilename'] = $this->acronym . '/' . $file;
+				
+				// TODO - update this to match the schema discussed at 2017-03-28's Civic Tech!
+				$fileValues['uuid'] = $this->acronym . '-' . $fileValues['referenceNumber'];
 
 
-			$referenceNumber = $fileValues['referenceNumber'];
-			// If the row already exists, update it
-			// Otherwise, add it
-			if(isset($this->contracts[$referenceNumber])) {
-				echo "Updating $referenceNumber\n";
+				$referenceNumber = $fileValues['referenceNumber'];
+				// If the row already exists, update it
+				// Otherwise, add it
+				if(isset($this->contracts[$referenceNumber])) {
+					echo "Updating $referenceNumber\n";
 
-				// Because we don't have a year/quarter for all organizations, let's use the largest contractValue for now:
-				$existingContract = $this->contracts[$referenceNumber];
-				if($fileValues['contractValue'] > $existingContract['contractValue']) {
+					// Because we don't have a year/quarter for all organizations, let's use the largest contractValue for now:
+					$existingContract = $this->contracts[$referenceNumber];
+					if($fileValues['contractValue'] > $existingContract['contractValue']) {
+						$this->contracts[$referenceNumber] = $fileValues;
+					}
+
+					// Add entries to the amendedValues array
+					// If it's the first time, add the original too
+					if($existingContract['amendedValues']) {
+						$this->contracts[$referenceNumber]['amendedValues'] = array_merge($existingContract['amendedValues'], [$fileValues['contractValue']]);
+					}
+					else {
+						$this->contracts[$referenceNumber]['amendedValues'] = [
+							$existingContract['contractValue'],
+							$fileValues['contractValue'],
+						];
+					}
+
+				} else {
+					// Add to the contracts array:
 					$this->contracts[$referenceNumber] = $fileValues;
 				}
 
-				// Add entries to the amendedValues array
-				// If it's the first time, add the original too
-				if($existingContract['amendedValues']) {
-					$this->contracts[$referenceNumber]['amendedValues'] = array_merge($existingContract['amendedValues'], [$fileValues['contractValue']]);
-				}
-				else {
-					$this->contracts[$referenceNumber]['amendedValues'] = [
-						$existingContract['contractValue'],
-						$fileValues['contractValue'],
-					];
-				}
-
-			} else {
-				// Add to the contracts array:
-				$this->contracts[$referenceNumber] = $fileValues;
 			}
+			else {
+				echo "Error: could not parse data for $file\n";
+			}
+
+			
 
 			$filesParsed++;
 
