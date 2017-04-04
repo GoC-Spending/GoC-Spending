@@ -20,7 +20,7 @@ class Configuration {
 
 	public static $rawHtmlFolder = 'contracts';
 	
-	public static $jsonOutputFile = 'contracts-output.json';
+	public static $jsonOutputFolder = 'generated-data';
 	
 	public static $departmentsToSkip = [
 		// 'agr',
@@ -237,8 +237,22 @@ class DepartmentParser {
 
 			$department->parseDepartment();
 
+			// Rather than storing the whole works in memory, 
+			// let's just save one department at a time in individual
+			// JSON files:
+
+			$directoryPath = dirname(__FILE__) . '/' . Configuration::$jsonOutputFolder . '/' . $acronym;
+
+			// If the folder doesn't exist yet, create it:
+			// Thanks to http://stackoverflow.com/a/15075269/756641
+			if(! is_dir($directoryPath)) {
+				mkdir($directoryPath, 0755, true);
+			}
+
+			file_put_contents($directoryPath . '/contracts.json', json_encode($department->contracts, JSON_PRETTY_PRINT));
+
 			// var_dump($department->contracts);
-			$output[$acronym] = $department->contracts;
+			// $output[$acronym] = $department->contracts;
 
 			echo "Started " . $acronym . " at " . $startDate . "\n";
 			echo "Finished at ". date('Y-m-d H:i:s') . " \n\n";
@@ -247,7 +261,7 @@ class DepartmentParser {
 
 		}
 
-		file_put_contents(dirname(__FILE__) . '/' . Configuration::$jsonOutputFile, json_encode($output, JSON_PRETTY_PRINT));
+		
 
 	}
 
