@@ -27,7 +27,7 @@ class Configuration {
 		// 'agr',
 	];
 
-	public static $limitDepartments = 1;
+	public static $limitDepartments = 2;
 	public static $limitFiles = 0;
 
 }
@@ -84,6 +84,15 @@ class DepartmentParser {
 			return $time;
 		}
 		else {
+			// Try doing the month switch and see if that helps:
+			if($dateInput) {
+				$time = strtotime(self::switchMonthsAndDays($dateInput));
+				if($time) {
+					echo "Switched months and days for: '$dateInput'\n";
+					return $time;
+				}
+			}
+			
 			echo "Date cleanup error: '$dateInput'\n";
 			return false;
 		}
@@ -325,7 +334,7 @@ class FileParser {
 		$labelToKey = array_flip($keyToLabel);
 
 		$matches = [];
-		$pattern = '/<th scope="row">([\w-@$#%^&+.,;:\s]*)<\/th><td>([\w-@$#%^&+.,;:\s]*)<\/td>/';
+		$pattern = '/<th scope="row">([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/th><td>([\w-@$#%^&+.,;:\s]*)<\/td>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -357,7 +366,9 @@ class FileParser {
 
 	public static function csa($html) {
 
-		// var_dump($html);
+		// Just get the table in the middle:
+		$split = explode('DEBUT DU CONTENU', $html);
+		$html = explode('FIN DU CONTENU', $split[1])[0];
 
 		$values = [];
 
@@ -382,7 +393,7 @@ class FileParser {
 		];
 
 		$matches = [];
-		$pattern = '/<td class="align-middle">([\w-@$#%^&+.\'(),;:<\/>\s]*)<\/td>/';
+		$pattern = '/<td class="align-middle">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/td>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -436,9 +447,16 @@ class FileParser {
 		// var_dump($matches);
 
 		$values['contractDate'] = $matches[0][1];
+
 		// Fix the date issue while we're at it:
-		$values['contractPeriodStart'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[1][1]));
-		$values['contractPeriodEnd'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[2][1]));
+		if(isset($matches[1][1])) {
+			$values['contractPeriodStart'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[1][1]));
+		}
+		if(isset($matches[2][1])) {
+			$values['contractPeriodEnd'] = DepartmentParser::switchMonthsAndDays(str_replace('-00', '-0', $matches[2][1]));
+		}
+		
+		
 
 		// var_dump($values);
 
