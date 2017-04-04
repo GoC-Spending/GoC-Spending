@@ -91,7 +91,7 @@ class ParserJsonToCsv {
 
 	}
 
-	public static function convert($inputFilename, $outputFilename) {
+	public static function convert($sourceDirectory, $outputFilename) {
 
 		$startDate = date('Y-m-d H:i:s');
 		echo "Starting at ". $startDate . " \n";
@@ -104,19 +104,32 @@ class ParserJsonToCsv {
 		fputs($fp, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
 		fputcsv($fp, self::headers());
 
-		// This could be pretty memory-intensive:
-		$jsonData = json_decode(file_get_contents($inputFilename), 1);
 
-		foreach($jsonData as $departmentArray) {
+		$files = [];
+		$departments = array_diff(scandir($sourceDirectory), ['..', '.']);
 
-			foreach($departmentArray as $contract) {
+		foreach($departments as $department) {
+			if(file_exists($sourceDirectory . '/' . $department . '/contracts.json')) {
+				$files[] = $sourceDirectory . '/' . $department . '/contracts.json';
+			}
+
+		}
+		// var_dump($files);
+		// exit();
+
+		foreach($files as $file) {
+
+			// This could be pretty memory-intensive:
+			$jsonData = json_decode(file_get_contents($file), 1);
+
+			foreach($jsonData as $contract) {
 
 				fputcsv($fp, self::contractToRow($contract, $vendorData));
 
 			}
 
-		}
 
+		}
 
 		echo "Started at " . $startDate . "\n";
 		echo "Finished at ". date('Y-m-d H:i:s') . " \n\n";
@@ -125,5 +138,5 @@ class ParserJsonToCsv {
 	}
 }
 
-ParserJsonToCsv::convert(dirname(__FILE__) . '/contracts-output.json', dirname(__FILE__) . '/contracts-output.csv');
+ParserJsonToCsv::convert(dirname(__FILE__) . '/generated-data', dirname(__FILE__) . '/contracts-output.csv');
 
