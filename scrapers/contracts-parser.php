@@ -279,7 +279,7 @@ class FileParser {
 		$labelToKey = array_flip($keyToLabel);
 
 		$matches = [];
-		$pattern = '/<th scope="row">([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/th><td>([\w-@$#%^&+.,;:\s]*)<\/td>/';
+		$pattern = '/<th scope="row">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/th><td>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/td>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -292,7 +292,7 @@ class FileParser {
 
 			if(array_key_exists($label, $labelToKey)) {
 
-				$values[$labelToKey[$label]] = $value;
+				$values[$labelToKey[$label]] = Helpers::cleanHtmlValue($value);
 
 			}
 
@@ -429,7 +429,7 @@ class FileParser {
 		$labelToKey = array_flip($keyToLabel);
 
 		$matches = [];
-		$pattern = '/<div class="span-2"><strong>([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/strong><\/div>[\s]*<div class="span-3">([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/div>/';
+		$pattern = '/<div class="span-2"><strong>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/strong><\/div>[\s]*<div class="span-3">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/div>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -443,7 +443,7 @@ class FileParser {
 
 			if(array_key_exists($label, $labelToKey)) {
 
-				$values[$labelToKey[$label]] = $value;
+				$values[$labelToKey[$label]] = Helpers::cleanHtmlValue($value);
 
 			}
 
@@ -495,7 +495,7 @@ class FileParser {
 		$labelToKey = array_flip($keyToLabel);
 
 		$matches = [];
-		$pattern = '/<div class="ic2col1 formLeftCol">([\wÀ-ÿ\-@$#%^&+.\/,;:\s]*)<\/div>[\s]*<div class="ic2col2 formRightCol">([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/div>/';
+		$pattern = '/<div class="ic2col1 formLeftCol">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/div>[\s]*<div class="ic2col2 formRightCol">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:<\/>\s]*)<\/div>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -509,7 +509,7 @@ class FileParser {
 
 			if(array_key_exists($label, $labelToKey)) {
 
-				$values[$labelToKey[$label]] = $value;
+				$values[$labelToKey[$label]] = Helpers::cleanHtmlValue($value);
 
 			}
 
