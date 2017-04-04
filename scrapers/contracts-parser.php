@@ -21,15 +21,16 @@ class Configuration {
 
 	public static $rawHtmlFolder = 'contracts';
 	
-	public static $jsonOutputFile = 'contracts-output-test.json';
+	public static $jsonOutputFile = 'contracts-output.json';
 	
 	public static $departmentsToSkip = [
-		'agr',
-		'csa',
+		// 'agr',
+		// 'csa',
+		// 'fin',
 	];
 
-	public static $limitDepartments = 1;
-	public static $limitFiles = 3;
+	public static $limitDepartments = 3;
+	public static $limitFiles = 0;
 
 }
 
@@ -92,9 +93,11 @@ class DepartmentParser {
 					echo "Switched months and days for: '$dateInput'\n";
 					return $time;
 				}
+				else {
+					echo "Date cleanup error: '$dateInput'\n";
+				}
 			}
-			
-			echo "Date cleanup error: '$dateInput'\n";
+			// If there's no $dateInput at all, don't print an error:
 			return false;
 		}
 		
@@ -142,6 +145,17 @@ class DepartmentParser {
 			return false;
 		}
 		
+
+	}
+
+	public static function stringBetween($start, $end, $string) {
+
+		if(! $string) {
+			return '';
+		}
+
+		$split = explode($start, $string);
+		return explode($end, $split[1])[0];
 
 	}
 
@@ -377,8 +391,7 @@ class FileParser {
 	public static function csa($html) {
 
 		// Just get the table in the middle:
-		$split = explode('DEBUT DU CONTENU', $html);
-		$html = explode('FIN DU CONTENU', $split[1])[0];
+		$html = DepartmentParser::stringBetween('DEBUT DU CONTENU', 'FIN DU CONTENU', $html);
 
 		$values = [];
 
@@ -469,6 +482,60 @@ class FileParser {
 		
 
 		// var_dump($values);
+
+		return $values;
+
+	}
+
+	public static function fin($html) {
+
+		$html = DepartmentParser::stringBetween('MainContentStart', 'MainContentEnd', $html);
+
+		$values = [];
+		$keyToLabel = [
+			'vendorName' => 'Vendor Name:',
+			'referenceNumber' => 'Reference Number:',
+			'contractDate' => 'Contract Date:',
+			'description' => 'Description of work:',
+			'contractPeriodStart' => '',
+			'contractPeriodEnd' => '',
+			'contractPeriodRange' => 'Contract Period:',
+			'deliveryDate' => 'Delivery Date:',
+			'originalValue' => 'Original Contract Value:',
+			'contractValue' => 'Contract Value:',
+			'comments' => 'Comments:',
+		];
+		$labelToKey = array_flip($keyToLabel);
+
+		$matches = [];
+		$pattern = '/<div class="span-2"><strong>([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/strong><\/div>[\s]*<div class="span-3">([\wÀ-ÿ\-@$#%^&+.,;:\s]*)<\/div>/';
+
+		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
+
+		// var_dump($values);
+		// exit();
+
+		foreach($matches as $match) {
+
+			$label = trim(str_replace('&nbsp;', '', $match[1]));
+			$value = trim(str_replace('&nbsp;', '', $match[2]));
+
+			if(array_key_exists($label, $labelToKey)) {
+
+				$values[$labelToKey[$label]] = $value;
+
+			}
+
+		}
+
+		// Change the "to" range into start and end values:
+		if(isset($values['contractPeriodRange']) && $values['contractPeriodRange']) {
+			$split = explode(' to ', $values['contractPeriodRange']);
+			$values['contractPeriodStart'] = $split[0];
+			$values['contractPeriodEnd'] = $split[1];
+
+
+		}
 
 		return $values;
 
