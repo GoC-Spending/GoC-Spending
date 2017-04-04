@@ -58,7 +58,7 @@ class Helpers {
 
 	public static function cleanHtmlValue($value) {
 
-		$value = str_replace('&nbsp;', ' ', $value);
+		$value = str_replace(['&nbsp;', '&amp;', '&AMP;'], [' ', '&', '&'], $value);
 		$value = trim(strip_tags($value));
 		return $value;
 
