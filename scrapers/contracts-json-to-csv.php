@@ -33,7 +33,13 @@ class ParserJsonToCsv {
 
 		// If there's no end year, assume that it's the same as the start year:
 		if(! $contract['endYear']) {
-			$contract['endYear'] = $contract['startYear'];
+			if($contract['deliveryDate']) {
+				$contract['endYear'] = Helpers::dateToYear($contract['deliveryDate']);
+			}
+			else {
+				$contract['endYear'] = $contract['startYear'];
+			}
+			
 		}
 
 		// If there's no original contract value, use the current value:
