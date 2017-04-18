@@ -27,10 +27,10 @@ class DatasetParser {
 		'contractValue' => '',
 		'comments' => '',
 		'ownerAcronym' => '',
-		'sourceYear' => '',
-		'sourceQuarter' => '',
-		'sourceFilename' => '',
-		'sourceURL' => '',
+		// 'sourceYear' => '',
+		// 'sourceQuarter' => '',
+		// 'sourceFilename' => '',
+		// 'sourceURL' => '',
 		'amendedValues' => [],
 	];
 
@@ -49,6 +49,72 @@ class DatasetParser {
 		'comments' => 12,
 		'ownerAcronym' => 31,
 	];
+
+	public static function cleanupRow(&$rowOutput) {
+
+		// Various minor cleanup:
+		$rowOutput['contractValue'] = Helpers::cleanupContractValue($rowOutput['contractValue']);
+		$rowOutput['originalValue'] = Helpers::cleanupContractValue($rowOutput['originalValue']);
+
+		$rowOutput['uuid'] = $rowOutput['ownerAcronym'] . '-' . $rowOutput['referenceNumber'];
+
+		
+		// Date cleanup attempts:
+		$rowOutput['contractPeriodStart'] = trim($rowOutput['contractPeriodStart']);
+		if($rowOutput['contractPeriodStart']) {
+			$rowOutput['contractPeriodStart'] = Helpers::regDateCleanup($rowOutput['contractPeriodStart']);
+		}
+
+		$rowOutput['deliveryDate'] = trim($rowOutput['deliveryDate']);
+		if($rowOutput['deliveryDate']) {
+			$rowOutput['deliveryDate'] = Helpers::regDateCleanup($rowOutput['deliveryDate']);
+		}
+
+		$rowOutput['contractDate'] = trim($rowOutput['contractDate']);
+		if($rowOutput['contractDate']) {
+			$rowOutput['contractDate'] = Helpers::regDateCleanup($rowOutput['contractDate']);
+		}
+		
+
+		if($rowOutput['contractPeriodStart'] && Helpers::dateToYear($rowOutput['contractPeriodStart']) == false) {
+			// 
+			echo "Error parsing date for contractPeriodStart\n";
+			var_dump($data);
+			var_dump($rowOutput);
+			exit();
+		}
+
+
+		// For text values, cleanup potential error-prone characters:
+		// $rowOutput['vendorName'] = Helpers::cleanNonAsciiCharactersInString($rowOutput['vendorName']);
+		// $rowOutput['description'] = Helpers::cleanNonAsciiCharactersInString($rowOutput['description']);
+		// $rowOutput['comments'] = Helpers::cleanNonAsciiCharactersInString($rowOutput['comments']);
+
+		// Testing for the DFATD glitch
+		// $rowOutput['vendorName'] = sha1($rowOutput['vendorName']);
+		// $rowOutput['description'] = sha1($rowOutput['description']);
+		// $rowOutput['comments'] = sha1($rowOutput['comments']);
+
+		
+
+
+		// For literally one SSC row, that's missing a referenceNumber but has a procurementId:
+		// if(! $rowOutput['referenceNumber']) {
+		// 	$rowOutput['referenceNumber'] = $rowOutput['procurementId'];
+		// }
+		// unset($rowOutput['procurementId']);
+
+
+		if($rowOutput['ownerAcronym'] && $rowOutput['referenceNumber']) {
+			return true;
+		}
+
+		// If this returns false, don't actually add it:
+		return false;
+
+
+
+	}
 
 	public static function parseDataset($filename) {
 
@@ -88,26 +154,49 @@ class DatasetParser {
 				$rowOutput['ownerAcronym'] = explode('-', $rowOutput['ownerAcronym'])[0];
 			}
 
-			// Various minor cleanup:
-			$rowOutput['contractValue'] = Helpers::cleanupContractValue($rowOutput['contractValue']);
-			$rowOutput['originalValue'] = Helpers::cleanupContractValue($rowOutput['originalValue']);
-
-			$rowOutput['uuid'] = $rowOutput['ownerAcronym'] . '-' . $rowOutput['referenceNumber'];
-
-			// var_dump($data);
-			// var_dump($rowOutput);
-
-			// For literally one SSC row, that's missing a referenceNumber but has a procurementId:
-			if(! $rowOutput['referenceNumber']) {
-				$rowOutput['referenceNumber'] = $rowOutput['procurementId'];
+			// The referenceNumber values are all unique, because they already include the year and quarter
+			// So instead we'll use the procurementId, which looks like the common value for the same contract:
+			if($rowOutput['procurementId']) {
+				$rowOutput['referenceNumber'] = strtolower(trim($rowOutput['procurementId']));
+			}
+			else {
+				echo "Warning: no procurementId for " . $rowOutput['referenceNumber'] . "\n";
 			}
 			unset($rowOutput['procurementId']);
 
-			if($rowOutput['ownerAcronym'] && $rowOutput['referenceNumber']) {
+			// Special handling for some iffy DFATD reference numbers (with encoding issues) that were crashing the JSON encode later:
+			if($rowOutput['ownerAcronym'] == 'dfatd') {
+				$rowOutput['referenceNumber'] = 'c' . Helpers::cleanNonAsciiCharactersInString($rowOutput['referenceNumber']);
+			}
+
+			if(self::cleanupRow($rowOutput)) {
 
 				// Store the row!
 				if(isset($output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']])) {
-					echo "Warning: " . $rowOutput['ownerAcronym'] . $rowOutput['referenceNumber'] . " already exists.\n";
+					// echo "Warning: " . $rowOutput['ownerAcronym'] . $rowOutput['referenceNumber'] . " already exists.\n";
+
+					// Let's use the largest contractValue for now:
+					// From the dataset, we should actually be able to parse based on chronological order, which would be better.
+					// TODO - update this to use the newest value rather than largest one.
+					$existingContract = $output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']];
+					if($rowOutput['contractValue'] > $existingContract['contractValue']) {
+						$output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']] = $rowOutput;
+					}
+
+
+					// Add entries to the amendedValues array
+					// If it's the first time, add the original too
+					if($existingContract['amendedValues']) {
+						$output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']]['amendedValues'] = array_merge($existingContract['amendedValues'], [$rowOutput['contractValue']]);
+					}
+					else {
+						$output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']]['amendedValues'] = [
+							$existingContract['contractValue'],
+							$rowOutput['contractValue'],
+						];
+					}
+
+
 				}
 				else {
 					$output[$rowOutput['ownerAcronym']][$rowOutput['referenceNumber']] = $rowOutput;
@@ -116,7 +205,7 @@ class DatasetParser {
 				
 			}
 			else {
-				echo "Error: no ownerAcronym for row $row\n";
+				echo "Error: could not add row $row\n";
 				var_dump($data);
 			}
 			
@@ -151,6 +240,8 @@ class DatasetParser {
 				continue;
 			}
 
+			echo "Exporting $acronym " . count($departmentArray) . " ";
+
 
 			$directoryPath = dirname(__FILE__) . '/generated-data/' . $acronym;
 
@@ -160,7 +251,43 @@ class DatasetParser {
 				mkdir($directoryPath, 0755, true);
 			}
 
-			file_put_contents($directoryPath . '/contracts.json', json_encode($departmentArray, JSON_PRETTY_PRINT));
+			if(file_put_contents($directoryPath . '/contracts.json', json_encode($departmentArray, JSON_PRETTY_PRINT))) {
+				echo "...saved.\n";
+			}
+			else {
+				// echo "STARTHERE: \n";
+				// var_export($departmentArray);
+
+				// echo "ENDHERE. \n";
+				echo "...failed.\n";
+
+				$newOutput = [];
+
+				$index = 0;
+				$limit = 100000;
+
+				foreach($departmentArray as $key => $data) {
+					$index++;
+					if($index > $limit) {
+						break;
+					}
+					$newOutput[$key] = $data;
+
+					echo $index;
+
+					if(json_encode($data, JSON_PRETTY_PRINT)) {
+						echo " P\n";
+					}
+					else {
+						echo " F\n";
+						var_dump($key);
+						var_dump($data);
+						exit();
+					}
+
+				}
+
+			}
 
 		}
 
@@ -171,7 +298,8 @@ class DatasetParser {
 
 }
 
-
+// var_dump(Helpers::extraCleanupDate('vendor name'));
+// exit();
 
 DatasetParser::exportDataset(dirname(__FILE__) . '/datasets/open.canada.ca/contracts.csv');
 

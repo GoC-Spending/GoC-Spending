@@ -23,18 +23,20 @@ class ParserJsonToCsv {
 
 		// In some cases, entries are missing a contract period start, but do have a contract date. If so, use that instead:
 		if(! $contract['startYear']) {
-			if($contract['deliveryDate']) {
-				$contract['startYear'] = Helpers::dateToYear($contract['deliveryDate']);
-			}
-			else {
-				$contract['startYear'] = Helpers::dateToYear($contract['contractDate']);
-			}
+			// if($contract['deliveryDate']) {
+			// 	$contract['startYear'] = Helpers::yearFromDate($contract['deliveryDate']);
+			// }
+			// else {
+			// 	$contract['startYear'] = Helpers::yearFromDate($contract['contractDate']);
+			// }
+
+			$contract['startYear'] = Helpers::yearFromDate($contract['contractDate']);
 		}
 
 		// If there's no end year, assume that it's the same as the start year:
 		if(! $contract['endYear']) {
 			if($contract['deliveryDate']) {
-				$contract['endYear'] = Helpers::dateToYear($contract['deliveryDate']);
+				$contract['endYear'] = Helpers::yearFromDate($contract['deliveryDate']);
 			}
 			else {
 				$contract['endYear'] = $contract['startYear'];
@@ -47,16 +49,20 @@ class ParserJsonToCsv {
 			$contract['originalValue'] = $contract['contractValue'];
 		}
 
+
+		
+
+		// Find the consolidated vendor name:
 		$contract['vendorClean'] = $vendorData->consolidateVendorNames($contract['vendorName']);
+
+
 
 
 	}
 
 	
 
-	public static function contractToRow($contract, $vendorData) {
-
-		self::checkContract($contract, $vendorData);
+	public static function contractToRow($contract) {
 
 		$output = [];
 
@@ -70,6 +76,7 @@ class ParserJsonToCsv {
 		
 		$output[] = $contract['originalValue'];
 		$output[] = count($contract['amendedValues']);
+		$output[] = $contract['possibleDuplicate'];
 		$output[] = $contract['description'];
 		$output[] = $contract['vendorName'];
 
@@ -89,6 +96,7 @@ class ParserJsonToCsv {
 			'End Year',
 			'Original Value',
 			'Number of Amendments',
+			'Possible Duplicate',
 			'Description',
 			'Original Vendor Name',
 		];
@@ -97,7 +105,13 @@ class ParserJsonToCsv {
 
 	}
 
-	public static function convert($sourceDirectory, $outputFilename) {
+	public static function rowToDuplicateIndicator($contract) {
+
+		return sha1($contract['vendorClean'] . $contract['contractDate'] . $contract['contractValue']);
+
+	}
+
+	public static function convert($sourceDirectory, $outputFilename, $ignoreDuplicates = 0) {
 
 		$startDate = date('Y-m-d H:i:s');
 		echo "Starting at ". $startDate . " \n";
@@ -125,14 +139,58 @@ class ParserJsonToCsv {
 
 		foreach($files as $file) {
 
+			echo "$file\n";
+
+
 			// This could be pretty memory-intensive:
 			$jsonData = json_decode(file_get_contents($file), 1);
 
+			$cleanData = [];
+			$duplicateIndicators = [];
+
+			// Loop through once, to get hints at possible duplicates
 			foreach($jsonData as $contract) {
 
-				fputcsv($fp, self::contractToRow($contract, $vendorData));
+				self::checkContract($contract, $vendorData);
+
+				$hash = self::rowToDuplicateIndicator($contract);
+				if(in_array($hash, $duplicateIndicators)) {
+					$contract['possibleDuplicate'] = 1;
+				}
+				else {
+					$contract['possibleDuplicate'] = 0;
+					$duplicateIndicators[] = $hash;
+				}
+				
+
+				$cleanData[] = $contract;
+			}
+
+			// var_dump($duplicateIndicators);
+			// exit();
+
+			echo "Starting: " . count($cleanData) . " rows \n";
+			unset($jsonData);
+
+			$index = 0;
+
+			foreach($cleanData as $row) {
+
+				$index++;
+				if($index % 100 == 0) {
+					echo "$index\n";
+				}
+
+				// Optionally ignore possible duplicate entries:
+				if($ignoreDuplicates && $row['possibleDuplicate'] == 1) {
+					continue;
+				}
+
+				fputcsv($fp, self::contractToRow($row));
 
 			}
+
+			echo "\n";
 
 
 		}
@@ -144,5 +202,5 @@ class ParserJsonToCsv {
 	}
 }
 
-ParserJsonToCsv::convert(dirname(__FILE__) . '/generated-data', dirname(__FILE__) . '/contracts-output.csv');
+ParserJsonToCsv::convert(dirname(__FILE__) . '/generated-data', dirname(__FILE__) . '/contracts-output.csv', 1);
 
