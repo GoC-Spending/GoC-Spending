@@ -1,0 +1,22 @@
+{
+    "160127": {
+        "uuid": "pmprb-160127",
+        "vendorName": "Quantum Management Services",
+        "referenceNumber": "160127",
+        "contractDate": "2016-01-07",
+        "description": "Temporary help services ",
+        "contractPeriodStart": "2016-12-28",
+        "contractPeriodEnd": "",
+        "startYear": "",
+        "endYear": "",
+        "deliveryDate": "2017-02-07",
+        "originalValue": 19458.6,
+        "contractValue": 24809.72,
+        "comments": "This contract is a call-up against a Public Works and Government Services Canada procurement tool. Temporary fill communication officer position due to vacancy. This contract includes one or more amendments.",
+        "ownerAcronym": "pmprb",
+        "amendedValues": [
+            19458.6,
+            24809.72
+        ]
+    }
+}
