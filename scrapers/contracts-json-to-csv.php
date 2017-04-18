@@ -50,7 +50,8 @@ class ParserJsonToCsv {
 		}
 
 
-		
+		$contract['yearsDuration'] = abs($contract['endYear'] - $contract['startYear']) + 1;
+		$contract['valuePerYear'] = $contract['contractValue'] / $contract['yearsDuration'];
 
 		// Find the consolidated vendor name:
 		$contract['vendorClean'] = $vendorData->consolidateVendorNames($contract['vendorName']);
@@ -74,9 +75,11 @@ class ParserJsonToCsv {
 		$output[] = $contract['startYear'];
 		$output[] = $contract['endYear'];
 		
+		$output[] = $contract['yearsDuration'];
+		$output[] = $contract['valuePerYear'];
+		
 		$output[] = $contract['originalValue'];
 		$output[] = count($contract['amendedValues']);
-		$output[] = $contract['possibleDuplicate'];
 		$output[] = $contract['description'];
 		$output[] = $contract['vendorName'];
 
@@ -94,9 +97,10 @@ class ParserJsonToCsv {
 			'Contract Date',
 			'Start Year',
 			'End Year',
+			'Duration',
+			'Value Per Year',
 			'Original Value',
 			'Number of Amendments',
-			'Possible Duplicate',
 			'Description',
 			'Original Vendor Name',
 		];
@@ -178,7 +182,7 @@ class ParserJsonToCsv {
 
 				$index++;
 				if($index % 100 == 0) {
-					echo "$index\n";
+					// echo "$index\n";
 				}
 
 				// Optionally ignore possible duplicate entries:
