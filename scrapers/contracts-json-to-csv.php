@@ -97,7 +97,7 @@ class ParserJsonToCsv {
 			'Contract Date',
 			'Start Year',
 			'End Year',
-			'Duration',
+			'Duration in Years',
 			'Value Per Year',
 			'Original Value',
 			'Number of Amendments',
@@ -115,7 +115,13 @@ class ParserJsonToCsv {
 
 	}
 
-	public static function convert($sourceDirectory, $outputFilename, $ignoreDuplicates = 0) {
+	public static function convert($sourceDirectory, $outputDirectory, $ignoreDuplicates = 0) {
+
+		$yearsToExport = [
+			2016,
+			2015,
+			2014,
+		];
 
 		$startDate = date('Y-m-d H:i:s');
 		echo "Starting at ". $startDate . " \n";
@@ -124,9 +130,17 @@ class ParserJsonToCsv {
 
 		// Thanks to,
 		// https://www.skoumal.net/en/making-utf-8-csv-excel/
-		$fp = fopen($outputFilename, 'w');
+		$fp = fopen($outputDirectory . '/contracts-output.csv', 'w');
 		fputs($fp, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
 		fputcsv($fp, self::headers());
+
+		// Also output to each of the year pointers.
+		$yearFPs = [];
+		foreach($yearsToExport as $year) {
+			$yearFPs[$year] = fopen($outputDirectory . '/contracts-output-' . $year .'.csv', 'w');
+			fputs($yearFPs[$year], $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+			fputcsv($yearFPs[$year], self::headers());
+		}
 
 
 		$files = [];
@@ -192,9 +206,18 @@ class ParserJsonToCsv {
 
 				fputcsv($fp, self::contractToRow($row));
 
+				// Export per-year CSV files (eg. for 2016)
+				foreach($yearsToExport as $year) {
+
+					if(Helpers::dateIsWithinYearRange($row['startYear'], $row['endYear'], $year)) {
+						fputcsv($yearFPs[$year], self::contractToRow($row));
+					}
+
+				}
+
 			}
 
-			echo "\n";
+			echo "...done.\n";
 
 
 		}
@@ -206,5 +229,5 @@ class ParserJsonToCsv {
 	}
 }
 
-ParserJsonToCsv::convert(dirname(__FILE__) . '/generated-data', dirname(__FILE__) . '/contracts-output.csv', 1);
+ParserJsonToCsv::convert(dirname(__FILE__) . '/generated-data', dirname(__FILE__) . '/csv-output', 1);
 

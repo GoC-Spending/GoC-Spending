@@ -322,4 +322,16 @@ class Helpers {
 	    return $text;
 	}
 
+
+	public static function dateIsWithinYearRange($startYear, $endYear, $targetYear) {
+
+		if($startYear <= $targetYear && $targetYear <= $endYear) {
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
+
 }
