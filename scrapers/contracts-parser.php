@@ -27,6 +27,8 @@ class Configuration {
 		// 'csa',
 		// 'fin',
 		// 'ic',
+		// 'infra',
+		// 'pwgsc',
 	];
 
 	public static $limitDepartments = 0;
@@ -82,11 +84,15 @@ class DepartmentParser {
 
 	public static function cleanParsedArray(&$values) {
 
-		$values['startYear'] = Helpers::dateToYear($values['contractPeriodStart']);
-		$values['endYear'] = Helpers::dateToYear($values['contractPeriodEnd']);
+		$values['startYear'] = Helpers::yearFromDate($values['contractPeriodStart']);
+		$values['endYear'] = Helpers::yearFromDate($values['contractPeriodEnd']);
 
 		$values['originalValue'] = Helpers::cleanupContractValue($values['originalValue']);
 		$values['contractValue'] = Helpers::cleanupContractValue($values['contractValue']);
+
+		if(! $values['contractValue']) {
+			$values['contractValue'] = $values['originalValue'];
+		}
 	}
 
 	public function parseDepartment() {
@@ -497,7 +503,7 @@ class FileParser {
 		$labelToKey = array_flip($keyToLabel);
 
 		$matches = [];
-		$pattern = '/<th>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:\/\s]*)<\/th>[\s]*<td>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:\s]*)<\/td>/';
+		$pattern = '/<th>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:\/\s]*)<\/th>[\s]*<td>([\wÀ-ÿ@$#%^&+\*\-.\'(),\/;:\s]*)<\/td>/';
 
 		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
 
@@ -594,6 +600,60 @@ class FileParser {
 
 		// var_dump($values);
 		// exit();
+
+		return $values;
+
+	}
+
+	public static function pwgsc($html) {
+
+		$html = Helpers::stringBetween('MainContentStart', 'MainContentEnd', $html);
+
+		$values = [];
+		$keyToLabel = [
+			'vendorName' => 'Vendor Name',
+			'referenceNumber' => 'Reference Number',
+			'contractDate' => 'Contract Date',
+			'description' => 'Description of Work',
+			'contractPeriodStart' => 'Contract Period - From',
+			'contractPeriodEnd' => 'Contract Period - To',
+			'contractPeriodRange' => 'Contract Period',
+			'deliveryDate' => 'Delivery Date',
+			'originalValue' => 'Contract Value',
+			'contractValue' => 'Total Amended Contract Value',
+			'comments' => 'Comments',
+		];
+		$labelToKey = array_flip($keyToLabel);
+
+		$matches = [];
+		$pattern = '/<th scope="row" class="row">([\wÀ-ÿ@$#%^&+\*\-.\'(),;:\/\s]*)<\/th>[\s]*<td>([\wÀ-ÿ@$#%^&+\*\-.\'(),\/;:\s]*)<\/td>/';
+
+		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
+
+		// var_dump($matches);
+		// exit();
+
+		foreach($matches as $match) {
+
+			$label = trim(str_replace('&nbsp;', '', $match[1]));
+			$value = trim(str_replace('&nbsp;', '', $match[2]));
+
+			if(array_key_exists($label, $labelToKey)) {
+
+				$values[$labelToKey[$label]] = Helpers::cleanHtmlValue($value);
+
+			}
+
+		}
+
+		// Change the "to" range into start and end values:
+		if(isset($values['contractPeriodRange']) && $values['contractPeriodRange']) {
+			$split = explode(' to ', $values['contractPeriodRange']);
+			$values['contractPeriodStart'] = $split[0];
+			$values['contractPeriodEnd'] = $split[1];
+
+
+		}
 
 		return $values;
 
