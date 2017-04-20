@@ -23,16 +23,17 @@ class Configuration {
 	public static $jsonOutputFolder = 'generated-data';
 	
 	public static $departmentsToSkip = [
-		'agr',
-		'csa',
-		'fin',
-		'ic',
-		'infra',
-		'pwgsc',
-		'sc',
+		// 'agr',
+		// 'csa',
+		// 'fin',
+		// 'ic',
+		// 'infra',
+		// 'pwgsc',
+		// 'sc',
+		// 'tbs',
 	];
 
-	public static $limitDepartments = 1;
+	public static $limitDepartments = 0;
 	public static $limitFiles = 0;
 
 }
