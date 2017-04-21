@@ -68,12 +68,16 @@ class DepartmentFetcher
 	public $indexSplitParameters;
 
 	public $quarterSplitParameters;
+	
+	public $contentSplitParameters;
 
 	public $quarterUrls;
 	public $contractUrls;
 	
 	public $totalContractsFetched = 0;
 	public $totalAlreadyDownloaded = 0;
+	
+	public $sleepBetweenDownloads = 0;
 
 	// Initialize new instances:
 	function __construct($detailsArray) {
@@ -82,6 +86,14 @@ class DepartmentFetcher
 		$this->indexUrl = $detailsArray['indexUrl'];
 		$this->indexSplitParameters = $detailsArray['indexSplitParameters'];
 		$this->quarterSplitParameters = $detailsArray['quarterSplitParameters'];
+
+		if(isset($detailsArray['contentSplitParameters'])) {
+			$this->contentSplitParameters = $detailsArray['contentSplitParameters'];
+		}
+
+		if(isset($detailsArray['sleepBetweenDownloads'])) {
+			$this->sleepBetweenDownloads = $detailsArray['sleepBetweenDownloads'];
+		}
 
 		$this->guzzleClient = new Client;
 	
@@ -164,13 +176,32 @@ class DepartmentFetcher
 			// Download the page in question:
 			$pageSource = $this->getPage($url);
 
-			// Store it to a local location:
-			file_put_contents($directoryPath . '/' . $filename, $pageSource);
+			if($pageSource) {
 
-			// Optionally sleep for a certain amount of time (eg. 0.1 seconds) in between fetches to avoid angry sysadmins:
-			if(Configuration::$sleepBetweenDownloads) {
-				sleep(Configuration::$sleepBetweenDownloads);
+				if($this->contentSplitParameters) {
+
+					$split = explode($this->contentSplitParameters['startSplit'], $pageSource);
+					$pageSource = explode($this->contentSplitParameters['endSplit'], $split[1])[0];
+
+				}
+
+				// Store it to a local location:
+				file_put_contents($directoryPath . '/' . $filename, $pageSource);
+
+				// Optionally sleep for a certain amount of time (eg. 0.1 seconds) in between fetches to avoid angry sysadmins:
+				if(Configuration::$sleepBetweenDownloads) {
+					sleep(Configuration::$sleepBetweenDownloads);
+				}
+
+				// This can now be configured per-department
+				// The two are cumulative (eg. you could have a system-wide sleep configuration, and a department-specific, and it'll sleep for both durations.)
+				if($this->sleepBetweenDownloads) {
+					sleep($this->sleepBetweenDownloads);
+				}
+
 			}
+
+			
 			
 			return true;
 
@@ -462,6 +493,39 @@ $departments['dnd'] = new DepartmentFetcher([
 		'endSplit' => '">',
 		'prependString' => 'http://www.admfincs.forces.gc.ca/apps/dc/contract-contrat-eng.asp?',
 	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '<!-- CONTENT BEGINS',
+		'endSplit' => '<!-- CONTENT ENDS',
+	],
+
+	'sleepBetweenDownloads' => 0,
+
+]);
+
+// Atlantic Canada Opportunities Agency (in dataset but incompletely)
+$departments['acoa'] = new DepartmentFetcher([
+	'ownerAcronym' => 'acoa',
+	'indexUrl' => 'http://www.acoa-apeca.gc.ca/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Reports.aspx',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Period.aspx?',
+		'endSplit' => '"',
+		'prependString' => 'http://www.acoa-apeca.gc.ca/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Period.aspx?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => 'href="/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Details.aspx?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.acoa-apeca.gc.ca/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Details.aspx?',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => 'id="mainContent">',
+		'endSplit' => '<!-- FOOTER BEGINS',
+	],
+
+	'sleepBetweenDownloads' => 0,
 ]);
 
 
