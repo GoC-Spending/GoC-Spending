@@ -528,9 +528,34 @@ $departments['acoa'] = new DepartmentFetcher([
 	'sleepBetweenDownloads' => 0,
 ]);
 
+// Canadian Heritage
+$departments['pch'] = new DepartmentFetcher([
+	'ownerAcronym' => 'pch',
+	'indexUrl' => 'http://www.pch.gc.ca/trans-trans/eng/1360352141559/1360352415739',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<a href="/pc-ch/dp-pd/cntrct/lst-eng.cfm?',
+		'endSplit' => '"',
+		'prependString' => 'http://www.pch.gc.ca/pc-ch/dp-pd/cntrct/lst-eng.cfm?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="detl-eng.cfm?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.pch.gc.ca/pc-ch/dp-pd/cntrct/detl-eng.cfm?',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '-->     <br /><br />',
+		'endSplit' => '<!-- WCMS:BOILERPLATE -->',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+
 
 // Run the fetchContracts method for a single department:
-$departments['dnd']->fetchContracts();
+$departments['pch']->fetchContracts();
 exit();
 
 // For each of the specified departments, download all their contracts:
