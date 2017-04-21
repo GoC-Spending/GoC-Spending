@@ -11,7 +11,7 @@
 // toobs2017@gmail.com and the GoC-Spending team!
 
 // Sample background usage:
-// php scrapers/contracts-scraper.php > scraper-results.log 2>&1 &
+// php scrapers/contracts-scraper.php > results.log 2>&1 &
 
 // Require Guzzle, via composer package
 // Note that the vendor directory is one level up
@@ -35,7 +35,7 @@ class Configuration {
 	public static $limitContractsPerQuarter = 0;
 
 	public static $departmentsToSkip = [
-		'pwgsc',
+		'agr',
 		'sc',
 		'tbs',
 		'fin',
@@ -43,8 +43,6 @@ class Configuration {
 		'ic',
 		'infra',
 		'pwgsc',
-		'sc',
-		'tbs',
 	];
 
 	// Optionally sleep for a certain number (or fraction) of seconds in-between contract page downloads:
