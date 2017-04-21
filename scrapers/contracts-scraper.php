@@ -31,8 +31,8 @@ class Configuration {
 	
 	// Note that these should be changed before bulk-downloading all contracts
 	// Set the limitQuarters and limitContractsPerQuarter values to 0 to ignore the limit and retrieve all contracts:
-	public static $limitQuarters = 0;
-	public static $limitContractsPerQuarter = 0;
+	public static $limitQuarters = 2;
+	public static $limitContractsPerQuarter = 2;
 
 	public static $departmentsToSkip = [
 		'agr',
@@ -553,10 +553,85 @@ $departments['pch'] = new DepartmentFetcher([
 	'sleepBetweenDownloads' => 0,
 ]);
 
+// Economic and Social Development Canada
+$departments['esdc'] = new DepartmentFetcher([
+	'ownerAcronym' => 'esdc',
+	'indexUrl' => 'http://disclosure.esdc.gc.ca/dp-pd/prdlstcdn-eng.jsp?site=1&section=2',
+
+	'indexSplitParameters' => [
+		'startSplit' => 'a href="smmrcdn-eng.jsp?',
+		'endSplit' => '">',
+		'prependString' => 'http://disclosure.esdc.gc.ca/dp-pd/smmrcdn-eng.jsp?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="dtlcdn-eng.jsp?',
+		'endSplit' => '"',
+		'prependString' => 'http://disclosure.esdc.gc.ca/dp-pd/dtlcdn-eng.jsp?',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '<!-- the main content -->',
+		'endSplit' => '<!-- end main content -->',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+
+// Environment Canada
+$departments['ec'] = new DepartmentFetcher([
+	'ownerAcronym' => 'ec',
+	'indexUrl' => 'http://www.ec.gc.ca/contracts-contrats/index.cfm?lang=En&n=168B9233-11',
+
+	'indexSplitParameters' => [
+		'startSplit' => 'a class="pdLink" href="index.cfm?',
+		'endSplit' => '"',
+		'prependString' => 'http://www.ec.gc.ca/contracts-contrats/index.cfm?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => 'a class="pdLink" href="index.cfm?lang=En&amp;state=detail',
+		'endSplit' => '"',
+		'prependString' => 'http://www.ec.gc.ca/contracts-contrats/index.cfm?lang=En&amp;state=detail',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '<!-- MainContentStart -->',
+		'endSplit' => '<!-- MainContentEnd -->',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+
+// Health Canada
+$departments['hc'] = new DepartmentFetcher([
+	'ownerAcronym' => 'hc',
+	'indexUrl' => 'http://www.contracts-contrats.hc-sc.gc.ca/cfob/mssid/contractdisc.nsf/webGetbyperiod?OpenView&Count=1000&ExpandAll&lang=eng&',
+
+	'indexSplitParameters' => [
+		'startSplit' => "<a href='/cfob/mssid/contractdisc.nsf/WEBbypurpose?OpenView",
+		'endSplit' => "'",
+		'prependString' => 'http://www.contracts-contrats.hc-sc.gc.ca/cfob/mssid/contractdisc.nsf/WEBbypurpose?OpenView',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => "a href='/cfob/mssid/contractdisc.nsf/WEBbypurpose/",
+		'endSplit' => "'",
+		'prependString' => 'http://www.contracts-contrats.hc-sc.gc.ca/cfob/mssid/contractdisc.nsf/WEBbypurpose/',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '<!-- CONTENT TITLE BEGINS | DEBUT DU TITRE DU CONTENU -->',
+		'endSplit' => '<!-- CONTENT ENDS | FIN DU CONTENU -->',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+
 
 // Run the fetchContracts method for a single department:
-// $departments['pch']->fetchContracts();
-// exit();
+$departments['hc']->fetchContracts();
+exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
