@@ -31,8 +31,8 @@ class Configuration {
 	
 	// Note that these should be changed before bulk-downloading all contracts
 	// Set the limitQuarters and limitContractsPerQuarter values to 0 to ignore the limit and retrieve all contracts:
-	public static $limitQuarters = 2;
-	public static $limitContractsPerQuarter = 2;
+	public static $limitQuarters = 0;
+	public static $limitContractsPerQuarter = 0;
 
 	public static $departmentsToSkip = [
 		'pwgsc',
@@ -529,6 +529,8 @@ $departments['acoa'] = new DepartmentFetcher([
 ]);
 
 // Canadian Heritage
+// Note that Canadian Heritage changed their contract reporting page as of 2016-2017 3rd Quarter
+// This only retrieves pages before that date.
 $departments['pch'] = new DepartmentFetcher([
 	'ownerAcronym' => 'pch',
 	'indexUrl' => 'http://www.pch.gc.ca/trans-trans/eng/1360352141559/1360352415739',
@@ -555,8 +557,8 @@ $departments['pch'] = new DepartmentFetcher([
 
 
 // Run the fetchContracts method for a single department:
-$departments['pch']->fetchContracts();
-exit();
+// $departments['pch']->fetchContracts();
+// exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
