@@ -41,6 +41,10 @@ class Configuration {
 		'fin',
 		'csa',
 		'ic',
+		'infra',
+		'pwgsc',
+		'sc',
+		'tbs',
 	];
 
 	// Optionally sleep for a certain number (or fraction) of seconds in-between contract page downloads:
@@ -442,10 +446,28 @@ $departments['ic'] = new DepartmentFetcher([
 ]);
 
 
+// Department of National Defence + the Canadian Armed Forces
+$departments['dnd'] = new DepartmentFetcher([
+	'ownerAcronym' => 'dnd',
+	'indexUrl' => 'http://www.admfincs.forces.gc.ca/apps/dc/intro-eng.asp',
+
+	'indexSplitParameters' => [
+		'startSplit' => 'href="qua-tri-eng.asp?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.admfincs.forces.gc.ca/apps/dc/qua-tri-eng.asp?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => '<a href="contract-contrat-eng.asp?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.admfincs.forces.gc.ca/apps/dc/contract-contrat-eng.asp?',
+	],
+]);
+
 
 // Run the fetchContracts method for a single department:
-// $departments['ic']->fetchContracts();
-// exit();
+$departments['dnd']->fetchContracts();
+exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
