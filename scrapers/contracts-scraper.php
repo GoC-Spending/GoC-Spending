@@ -603,7 +603,7 @@ $departments['ec'] = new DepartmentFetcher([
 	'sleepBetweenDownloads' => 0,
 ]);
 
-// Health Canada
+// Health Canada (in the dataset but incompletely)
 $departments['hc'] = new DepartmentFetcher([
 	'ownerAcronym' => 'hc',
 	'indexUrl' => 'http://www.contracts-contrats.hc-sc.gc.ca/cfob/mssid/contractdisc.nsf/webGetbyperiod?OpenView&Count=1000&ExpandAll&lang=eng&',
@@ -628,9 +628,69 @@ $departments['hc'] = new DepartmentFetcher([
 	'sleepBetweenDownloads' => 0,
 ]);
 
+// IRCC (formerly CIC), not including the Passport program which has a separate set of disclosure pages
+$departments['cic'] = new DepartmentFetcher([
+	'ownerAcronym' => 'cic',
+	'indexUrl' => 'http://www.cic.gc.ca/disclosure-divulgation/index-eng.aspx',
+
+	'indexSplitParameters' => [
+		'startSplit' => "a href='index-eng.aspx?",
+		'endSplit' => "'",
+		'prependString' => 'http://www.cic.gc.ca/disclosure-divulgation/index-eng.aspx?',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => "a href='index-eng.aspx?dept=1&amp;lang=eng&amp;p=4",
+		'endSplit' => "'",
+		'prependString' => 'http://www.cic.gc.ca/disclosure-divulgation/index-eng.aspx?dept=1&lang=eng&p=4',
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => '</div></div><br />&nbsp;',
+		'endSplit' => '<!-- Content place holder end -->',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+
+// Indigenous and Northern Affairs Canada
+// This actually will necessitate a switch to regular expressions, since the page includes elements that are similar enough that the explode-based function won't work.
+/*
+$departments['aadnc'] = new DepartmentFetcher([
+	'ownerAcronym' => 'aadnc',
+	'indexUrl' => 'http://www.aadnc-aandc.gc.ca/prodis/cntrcts/rprts-eng.asp',
+
+	'indexSplitParameters' => [
+		'startSplit' => '<li><a href="/prodis/cntrcts/',
+		'endSplit' => '"',
+		'prependString' => 'http://www.aadnc-aandc.gc.ca/prodis/cntrcts/',
+	],
+
+	'quarterSplitParameters' => [
+		'startSplit' => 'href="/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Details.aspx?',
+		'endSplit' => '">',
+		'prependString' => 'http://www.acoa-apeca.gc.ca/eng/Accountability/ProactiveDisclosure/Contracts/Pages/Details.aspx?',
+
+		'multiPage' => [
+			'startSplit' => '<a class="linkContenu" href="/eng/publications/contracts-list.asp?',
+			'endSplit' => '">',
+			'prependString' => 'http://www.asc-csa.gc.ca/eng/publications/contracts-list.asp?',
+			'includeOriginal' => 1,
+		],
+	],
+
+	'contentSplitParameters' => [
+		'startSplit' => 'id="mainContent">',
+		'endSplit' => '<!-- FOOTER BEGINS',
+	],
+
+	'sleepBetweenDownloads' => 0,
+]);
+*/
+
 
 // Run the fetchContracts method for a single department:
-$departments['hc']->fetchContracts();
+$departments['cic']->fetchContracts();
 exit();
 
 // For each of the specified departments, download all their contracts:
