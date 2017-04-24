@@ -31,8 +31,8 @@ class Configuration {
 	
 	// Note that these should be changed before bulk-downloading all contracts
 	// Set the limitQuarters and limitContractsPerQuarter values to 0 to ignore the limit and retrieve all contracts:
-	public static $limitQuarters = 2;
-	public static $limitContractsPerQuarter = 2;
+	public static $limitQuarters = 0;
+	public static $limitContractsPerQuarter = 0;
 
 	public static $departmentsToSkip = [
 		'agr',
@@ -43,6 +43,9 @@ class Configuration {
 		'ic',
 		'infra',
 		'pwgsc',
+		'dnd',
+		'pch',
+		'acoa',
 	];
 
 	// Optionally sleep for a certain number (or fraction) of seconds in-between contract page downloads:
@@ -690,8 +693,8 @@ $departments['aadnc'] = new DepartmentFetcher([
 
 
 // Run the fetchContracts method for a single department:
-$departments['cic']->fetchContracts();
-exit();
+// $departments['cic']->fetchContracts();
+// exit();
 
 // For each of the specified departments, download all their contracts:
 // For testing purposes, the number of quarters and contracts downloaded per department can be limited in the Configuration class above.
