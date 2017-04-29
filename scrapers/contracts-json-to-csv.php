@@ -57,6 +57,17 @@ class ParserJsonToCsv {
 		$contract['vendorClean'] = $vendorData->consolidateVendorNames($contract['vendorName']);
 
 
+		// Remove any linebreaks etc.
+		// vendorName
+		// referenceNumber
+		// description
+		// comments
+		foreach(['vendorName', 'referenceNumber', 'description', 'comments'] as $textField) {
+			if(isset($values[$textField]) && $values[$textField]) {
+				$values[$textField] = Helpers::removeLinebreaks($values[$textField]);
+			}
+
+		}
 
 
 	}

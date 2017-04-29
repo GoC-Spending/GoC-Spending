@@ -226,6 +226,7 @@ class DatasetParser {
 
 		$skipDepartments = [
 			'fin',
+			'dnd',
 		];
 
 		$startDate = date('Y-m-d H:i:s');

@@ -43,6 +43,7 @@ class Helpers {
 
 	}
 
+	// Should transition to yearFromDate (below) which is more reliable:
 	public static function dateToYear($dateInput) {
 
 		$time = self::cleanupDate($dateInput);
@@ -69,6 +70,32 @@ class Helpers {
 		}
 
 		return false;
+
+	}
+
+	public static function fixDndDate($dateInput) {
+
+		$year = self::yearFromDate($dateInput);
+
+		// Default backup values
+		$month = '01';
+		$day = '01';
+
+		$matches = [];
+		$pattern = '/([0-9]+)-/';
+
+		preg_match_all($pattern, $dateInput, $matches, PREG_SET_ORDER);
+
+		if($matches) {
+			if(isset($matches[0][1])) {
+				$day = str_pad($matches[0][1], 2, '0', STR_PAD_LEFT);
+			}
+			if(isset($matches[1][1])) {
+				$month = str_pad($matches[1][1], 2, '0', STR_PAD_LEFT);
+			}
+		}
+
+		return $year . '-' . $month . '-' . $day;
 
 	}
 
@@ -141,6 +168,13 @@ class Helpers {
 
 	}
 
+	public static function removeLinebreaks($input) {
+
+		$output = str_replace(["\n", "\r", "\t"], ' ', $input);
+		return trim($output);
+
+	}
+
 	public static function switchMonthsAndDays($dateString, $printErrors = 1) {
 		// Takes a YYYY-DD-MM (whyyyy, CSA?)
 		// and changes it to YYYY-MM-DD
@@ -168,6 +202,13 @@ class Helpers {
 
 		$split = explode($start, $string);
 		return explode($end, $split[1])[0];
+
+	}
+
+	public static function cleanText($inputText) {
+
+		// return self::cleanNonAsciiCharactersInString($inputText);
+		return iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $inputText);
 
 	}
 

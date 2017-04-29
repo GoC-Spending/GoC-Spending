@@ -14,7 +14,7 @@
 require('contracts-helpers.php');
 
 // Go crazy!
-ini_set('memory_limit', '512M');
+ini_set('memory_limit', '3200M');
 
 class Configuration {
 
@@ -31,9 +31,12 @@ class Configuration {
 		// 'pwgsc',
 		// 'sc',
 		// 'tbs',
+		// 'acoa',
+		// 'pch',
+		'dnd',
 	];
 
-	public static $limitDepartments = 0;
+	public static $limitDepartments = 2;
 	public static $limitFiles = 0;
 
 }
@@ -95,6 +98,14 @@ class DepartmentParser {
 		if(! $values['contractValue']) {
 			$values['contractValue'] = $values['originalValue'];
 		}
+
+		// Check for error-y non-unicode characters
+		$values['referenceNumber'] = Helpers::cleanText($values['referenceNumber']);
+		$values['vendorName'] = Helpers::cleanText($values['vendorName']);
+		$values['comments'] = Helpers::cleanText($values['comments']);
+		$values['description'] = Helpers::cleanText($values['description']);
+
+
 	}
 
 	public function parseDepartment() {
@@ -132,12 +143,21 @@ class DepartmentParser {
 
 				// Useful for troubleshooting:
 				$fileValues['sourceFilename'] = $this->acronym . '/' . $file;
+
+				// A lot of DND's entries are missing reference numbers:
+				if(! $fileValues['referenceNumber']) {
+					echo "Warning: no reference number.\n";
+					$filehash = explode('.', $file)[0];
+
+					$fileValues['referenceNumber'] = $filehash;
+
+				}
 				
 				// TODO - update this to match the schema discussed at 2017-03-28's Civic Tech!
 				$fileValues['uuid'] = $this->acronym . '-' . $fileValues['referenceNumber'];
 
-
 				$referenceNumber = $fileValues['referenceNumber'];
+
 				// If the row already exists, update it
 				// Otherwise, add it
 				if(isset($this->contracts[$referenceNumber])) {
@@ -257,9 +277,50 @@ class DepartmentParser {
 				mkdir($directoryPath, 0755, true);
 			}
 
-			file_put_contents($directoryPath . '/contracts.json', json_encode($department->contracts, JSON_PRETTY_PRINT));
+			
+			// Iterative check of json_encode
+			// Trying to catch encoding issues
+			if(file_put_contents($directoryPath . '/contracts.json', json_encode($department->contracts, JSON_PRETTY_PRINT))) {
+				echo "...saved.\n";
+			}
+			else {
+				// echo "STARTHERE: \n";
+				// var_export($departmentArray);
+
+				// echo "ENDHERE. \n";
+				echo "...failed.\n";
+
+				$newOutput = [];
+
+				$index = 0;
+				$limit = 1000000;
+
+				foreach($department->contracts as $key => $data) {
+					$index++;
+					if($index > $limit) {
+						break;
+					}
+					$newOutput[$key] = $data;
+
+					echo $index;
+
+					if(json_encode($data, JSON_PRETTY_PRINT)) {
+						echo " P\n";
+					}
+					else {
+						echo " F\n";
+						var_dump($key);
+						var_dump($data);
+						exit();
+					}
+
+				}
+
+			}
+
 
 			// var_dump($department->contracts);
+			// var_dump(json_encode($department->contracts, JSON_PRETTY_PRINT));
 			// $output[$acronym] = $department->contracts;
 
 			echo "Started " . $acronym . " at " . $startDate . "\n";
@@ -764,6 +825,69 @@ class FileParser {
 
 
 		}
+
+		return $values;
+
+	}
+
+	public static function dnd($html) {
+
+		// DND and departments after are pre-trimmed to just the content table, -ish, to save hard drive space.
+
+		$values = [];
+		$keyToLabel = [
+			'vendorName' => 'Vendor Name',
+			'referenceNumber' => 'Reference Number',
+			'contractDate' => 'Contract Date',
+			'description' => 'Description of Work',
+			'contractPeriodStart' => '',
+			'contractPeriodEnd' => '',
+			'contractPeriodRange' => 'Contract Period',
+			'deliveryDate' => 'Delivery Date',
+			'originalValue' => '',
+			'contractValue' => 'Contract Value',
+			'comments' => 'Comments',
+		];
+		$labelToKey = array_flip($keyToLabel);
+
+		$matches = [];
+		$pattern = '/<tr><th>([\wÀ-ÿ@$#%^&+\*\-.\'(),;:\/\s]*)<\/th><td>([\wÀ-ÿ@$#%^&+\*\-.\'()\/,;:\s]*)<\/td>/';
+
+		preg_match_all($pattern, $html, $matches, PREG_SET_ORDER);
+
+		// var_dump($matches);
+		// exit();
+
+		foreach($matches as $match) {
+
+			$label = trim(str_replace('&nbsp;', '', $match[1]));
+			$value = trim(str_replace(['&nbsp;', 'N/A'], '', $match[2]));
+
+			if(array_key_exists($label, $labelToKey)) {
+
+				$values[$labelToKey[$label]] = Helpers::cleanHtmlValue($value);
+
+			}
+
+		}
+
+		// Change the "to" range into start and end values:
+		if(isset($values['contractPeriodRange']) && $values['contractPeriodRange']) {
+			$split = explode(' to ', $values['contractPeriodRange']);
+			$values['contractPeriodStart'] = trim($split[0]);
+			$values['contractPeriodEnd'] = trim($split[1]);
+
+
+		}
+
+		// Fix dates that are in d-m-yyyy format
+		foreach(['contractDate', 'deliveryDate', 'contractPeriodStart', 'contractPeriodEnd'] as $dateField) {
+			if(isset($values[$dateField]) && $values[$dateField]) {
+				$values[$dateField] = Helpers::fixDndDate($values[$dateField]);
+			}
+		}
+
+
 
 		return $values;
 
