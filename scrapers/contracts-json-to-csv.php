@@ -63,8 +63,8 @@ class ParserJsonToCsv {
 		// description
 		// comments
 		foreach(['vendorName', 'referenceNumber', 'description', 'comments'] as $textField) {
-			if(isset($values[$textField]) && $values[$textField]) {
-				$values[$textField] = Helpers::removeLinebreaks($values[$textField]);
+			if(isset($contract[$textField]) && $contract[$textField]) {
+				$contract[$textField] = Helpers::removeLinebreaks($contract[$textField]);
 			}
 
 		}
