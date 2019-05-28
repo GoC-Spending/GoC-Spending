@@ -28,5 +28,6 @@ Software code written for this project is published under the [MIT license](http
 
 ## Feedback
 
-If you have questions or feedback, or if you’ve conducted your own analyses, we’d love to hear from you. You can [post a public issue on GitHub](https://github.com/GoC-Spending/GoC-Spending/issues), or reach out by email at <gocspendinganalysis@gmail.com>.
+If you have questions or feedback, or if you’ve conducted your own analyses, we’d love to hear from you.  Get in touch by joining our [Slack channel](https://yowct-invite-bot.herokuapp.com/) (`#big_little_contractin`), posting a [public issue on GitHub](https://github.com/GoC-Spending/GoC-Spending/issues), or sending an email to <gocspendinganalysis@gmail.com>.
 
+This is a volunteer project and is not affiliated with the Government of Canada.
